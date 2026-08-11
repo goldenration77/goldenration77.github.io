@@ -363,9 +363,61 @@
     /* Hide desktop elements on mobile and vice-versa */
     body.mobile .desktop-only { display: none !important; }
     body.desktop .mobile-only { display: none !important; }
+    /* Floating music button */
+.music-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 30;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--text);
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow);
+  transition: background 0.2s, transform 0.15s;
+  pointer-events: auto;
+}
+
+.music-btn:hover {
+  background: var(--accent-soft);
+  transform: scale(1.08);
+}
+
+.music-btn:active {
+  transform: scale(0.96);
+}
+
+/* Mobile adjustment so it doesn't collide with the bottom sheet */
+body.mobile .music-btn {
+  bottom: auto;
+  top: 20px;
+  right: 16px;
+  width: 42px;
+  height: 42px;
+  font-size: 1.1rem;
+}
   </style>
 </head>
 <body>
+  <!-- Background music -->
+<audio id="bg-music" loop preload="auto">
+  <!-- Replace with your own file (MP3 or OGG recommended) -->
+  <source src="https://yourusername.github.io/audio/soundreality-autumn-ambient.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Floating music toggle button -->
+<button id="music-toggle" class="music-btn" aria-label="Toggle background music" title="Music">
+  <span class="icon-muted">🔇</span>
+  <span class="icon-playing" hidden>🔊</span>
+</button>
   <!-- UI layer -->
   <div class="ui">
     <!-- ===== DESKTOP ===== -->
@@ -401,7 +453,7 @@
         <li>
           <a href="https://codepen.io/ceramicSoda" target="_blank" rel="noopener">
             <span class="icon">🖊️</span>
-            WebGL code used from CodePen <em>ceramicSoda</em>
+            WebGL code from <i>codepen.io/ceramicSoda</i>
           </a>
         </li>
       </ul>
@@ -421,6 +473,7 @@
       <p class="hint">
         Tip: drag to orbit · scroll to zoom · leaves react to the pointer
       </p>
+      <p>Music by <a href="https://pixabay.com/users/soundreality-31074404/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=420193">Jurij</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=420193">Pixabay</a></p>
     </aside>
 
     <nav class="dock desktop-only">
@@ -454,7 +507,7 @@
         <li>
           <a href="https://freefrontend.com/webgl/page/3/#2026-01-21-interactive-3d-falling-leaves-shader-l" target="_blank" rel="noopener">
             <span class="icon">✨</span>
-            <span>WebGL Demo from the original author</span>
+            <span>WebGL by ceramicSoda</span>
           </a>
         </li>
         <li>
@@ -739,6 +792,64 @@
       setTimeout(killRandom, Math.random() * 1500 + 400);
     }
     killRandom();
+    // ---------- Background Music ----------
+const audio = document.getElementById("bg-music");
+const toggleBtn = document.getElementById("music-toggle");
+const iconMuted = toggleBtn.querySelector(".icon-muted");
+const iconPlaying = toggleBtn.querySelector(".icon-playing");
+
+// Start muted (browsers block autoplay with sound)
+audio.volume = 0.35; // comfortable level
+let isPlaying = false;
+
+// Restore preference if user previously enabled music
+if (localStorage.getItem("bgMusicEnabled") === "true") {
+  // We still need a user gesture, so we just prepare the UI
+  // Actual play happens on first click
+}
+
+function updateMusicUI() {
+  if (isPlaying) {
+    iconMuted.hidden = true;
+    iconPlaying.hidden = false;
+    toggleBtn.setAttribute("aria-label", "Mute background music");
+  } else {
+    iconMuted.hidden = false;
+    iconPlaying.hidden = true;
+    toggleBtn.setAttribute("aria-label", "Play background music");
+  }
+}
+
+toggleBtn.addEventListener("click", async () => {
+  try {
+    if (isPlaying) {
+      audio.pause();
+      isPlaying = false;
+      localStorage.setItem("bgMusicEnabled", "false");
+    } else {
+      await audio.play();
+      isPlaying = true;
+      localStorage.setItem("bgMusicEnabled", "true");
+    }
+    updateMusicUI();
+  } catch (err) {
+    console.warn("Music playback failed:", err);
+  }
+});
+
+// Optional: fade out a little when the tab is hidden
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && isPlaying) {
+    audio.volume = 0.15;
+  } else if (isPlaying) {
+    audio.volume = 0.35;
+  }
+});
   </script>
 </body>
+<footer>
+  <p>The page is 🄯 Copyleft 2026 Assembled by Soumyajit Roy with Grok</p>
+  <p>Music by <a href="https://pixabay.com/users/soundreality-31074404/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=420193">Jurij</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=420193">Pixabay</a></p>
+  <p>WebGL Code was written by <a href="https://codepen.io/ceramicSoda">ceramicSoda</a></p>
+</footer>    
 </html>
