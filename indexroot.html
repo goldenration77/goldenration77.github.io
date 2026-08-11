@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  
+  <!-- Primary SEO -->
+  <title>Your Name · Developer Portfolio & WebGL Experiments</title>
+  <meta name="description" content="Personal GitHub Pages site featuring an interactive 3D falling leaves WebGL animation, project links, demos, and social profiles." />
+  <meta name="keywords" content="portfolio, webgl, three.js, github pages, developer, interactive 3d, falling leaves shader, frontend" />
+  <meta name="author" content="Your Name" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://yourusername.github.io/" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://yourusername.github.io/" />
+  <meta property="og:title" content="Your Name · Developer Portfolio & WebGL Experiments" />
+  <meta property="og:description" content="Interactive 3D autumn leaves scene built with Three.js. Explore projects, demos, and more." />
+  <meta property="og:image" content="https://raw.githubusercontent.com/ceramicSoda/treeshader/main/assets/preview.png" />
+  <meta property="og:site_name" content="Your Name" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://yourusername.github.io/" />
+  <meta name="twitter:title" content="Your Name · Developer Portfolio & WebGL Experiments" />
+  <meta name="twitter:description" content="Interactive 3D autumn leaves scene built with Three.js. Explore projects, demos, and more." />
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/ceramicSoda/treeshader/main/assets/preview.png" />
+  <meta name="twitter:creator" content="@yourhandle" />
+
+  <!-- Theme & icons -->
+  <meta name="theme-color" content="#2f3257" />
+  <meta name="msapplication-TileColor" content="#2f3257" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍂</text></svg>" />
+
+  <style>
+
+    :root {
+      --accent: #e8b86d;
+      --accent-soft: rgba(232, 184, 109, 0.25);
+      --glass: rgba(20, 18, 28, 0.55);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text: #f5f0e8;
+      --text-muted: rgba(245, 240, 232, 0.7);
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      background: linear-gradient(160deg, #2f3257 0%, #3a1d2b 100%);
+    }
+
+    /* Canvas fills the viewport and stays behind UI */
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+      z-index: 0;
+      touch-action: none;
+    }
+
+    /* ========== DESKTOP / TABLET UI ========== */
+    body.desktop .ui {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: grid;
+      grid-template-columns: 280px 1fr 280px;
+      grid-template-rows: auto 1fr auto;
+      gap: 0;
+      padding: 28px 32px;
+    }
+
+    body.desktop .header {
+      grid-column: 1 / -1;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    body.desktop .brand {
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    }
+
+    body.desktop .brand span {
+      color: var(--accent);
+    }
+
+    body.desktop .social-top {
+      display: flex;
+      gap: 14px;
+    }
+
+    body.desktop .social-top a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    body.desktop .social-top a:hover {
+      color: var(--accent);
+    }
+
+    /* Left panel – project list */
+    body.desktop .panel {
+      pointer-events: auto;
+      background: var(--glass);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 22px 20px;
+      align-self: start;
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
+    }
+
+    body.desktop .panel h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    body.desktop .link-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    body.desktop .link-list a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    body.desktop .link-list a:hover {
+      background: var(--accent-soft);
+      transform: translateX(4px);
+    }
+
+    body.desktop .link-list .icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      display: grid;
+      place-items: center;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    /* Center area stays empty so the tree is fully visible */
+    body.desktop .center-space {
+      pointer-events: none;
+    }
+
+    /* Right panel – about / note */
+    body.desktop .about-card {
+      pointer-events: auto;
+      background: var(--glass);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 22px 20px;
+      align-self: start;
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: var(--text-muted);
+    }
+
+    body.desktop .about-card h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    body.desktop .about-card p {
+      margin-bottom: 12px;
+    }
+
+    body.desktop .about-card .hint {
+      font-size: 0.8rem;
+      opacity: 0.75;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    /* Bottom dock */
+    body.desktop .dock {
+      grid-column: 1 / -1;
+      pointer-events: auto;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    body.desktop .dock a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-border);
+      border-radius: 999px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.88rem;
+      box-shadow: var(--shadow);
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    body.desktop .dock a:hover {
+      background: var(--accent-soft);
+      transform: translateY(-2px);
+    }
+
+    /* ========== MOBILE UI ========== */
+    body.mobile .ui {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 16px 28px;
+    }
+
+    body.mobile .header {
+      pointer-events: auto;
+      text-align: center;
+    }
+
+    body.mobile .brand {
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.6);
+    }
+
+    body.mobile .brand span {
+      color: var(--accent);
+    }
+
+    body.mobile .tagline {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Floating bottom sheet */
+    body.mobile .sheet {
+      pointer-events: auto;
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -8px 32px rgba(0,0,0,0.4);
+      padding: 18px 16px 12px;
+      max-height: 52vh;
+      overflow-y: auto;
+    }
+
+    body.mobile .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 2px;
+      margin: 0 auto 14px;
+    }
+
+    body.mobile .sheet h2 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    body.mobile .link-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    body.mobile .link-list a {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 13px 12px;
+      border-radius: 12px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: background 0.15s;
+    }
+
+    body.mobile .link-list a:active {
+      background: var(--accent-soft);
+    }
+
+    body.mobile .link-list .icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.09);
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    body.mobile .social-row {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    body.mobile .social-row a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    body.mobile .hint {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 10px;
+      opacity: 0.8;
+    }
+
+    /* Shared link icons (emoji for zero-dependency) */
+    .icon { line-height: 1; }
+
+    /* Hide desktop elements on mobile and vice-versa */
+    body.mobile .desktop-only { display: none !important; }
+    body.desktop .mobile-only { display: none !important; }
+  </style>
+</head>
+<body>
+  <!-- UI layer -->
+  <div class="ui">
+    <!-- ===== DESKTOP ===== -->
+    <header class="header desktop-only">
+      <div class="brand">your<span>name</span>.github.io</div>
+      <nav class="social-top">
+        <a href="https://github.com/yourusername" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://twitter.com/yourhandle" target="_blank" rel="noopener">X / Twitter</a>
+        <a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="mailto:you@example.com">Email</a>
+      </nav>
+    </header>
+
+    <aside class="panel desktop-only">
+      <h2>Projects &amp; Pages</h2>
+      <ul class="link-list">
+        <li>
+          <a href="./projects/">
+            <span class="icon">📂</span>
+            Projects
+          </a>
+        </li>
+        <li>
+          <a href="./blog/">
+            <span class="icon">✍️</span>
+            Blog
+          </a>
+        </li>
+        <li>
+          <a href="./demos/">
+            <span class="icon">✨</span>
+            WebGL Demos
+          </a>
+        </li>
+        <li>
+          <a href="./about/">
+            <span class="icon">👋</span>
+            About
+          </a>
+        </li>
+        <li>
+          <a href="./resume.pdf" target="_blank">
+            <span class="icon">📄</span>
+            Resume
+          </a>
+        </li>
+        <li>
+          <a href="https://codepen.io/yourusername" target="_blank" rel="noopener">
+            <span class="icon">🖊️</span>
+            CodePen
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <div class="center-space desktop-only"></div>
+
+    <aside class="about-card desktop-only">
+      <h2>About</h2>
+      <p>
+        Interactive autumn scene powered by Three.js, instanced leaves and custom GLSL shaders.
+        Move the cursor to disturb the leaves — they fall when you get close.
+      </p>
+      <p>
+        This is the root of my GitHub Pages site. Use the panel on the left to explore other pages.
+      </p>
+      <p class="hint">
+        Tip: drag to orbit · scroll to zoom · leaves react to the pointer
+      </p>
+    </aside>
+
+    <nav class="dock desktop-only">
+      <a href="https://github.com/yourusername" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://twitter.com/yourhandle" target="_blank" rel="noopener">X</a>
+      <a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="mailto:you@example.com">Email</a>
+    </nav>
+
+    <!-- ===== MOBILE ===== -->
+    <header class="header mobile-only">
+      <div class="brand">your<span>name</span></div>
+      <p class="tagline">GitHub Pages · Interactive leaves</p>
+    </header>
+
+    <div class="sheet mobile-only">
+      <div class="sheet-handle"></div>
+      <h2>Pages</h2>
+      <ul class="link-list">
+        <li>
+          <a href="./projects/">
+            <span class="icon">📂</span>
+            Projects
+          </a>
+        </li>
+        <li>
+          <a href="./blog/">
+            <span class="icon">✍️</span>
+            Blog
+          </a>
+        </li>
+        <li>
+          <a href="./demos/">
+            <span class="icon">✨</span>
+            WebGL Demos
+          </a>
+        </li>
+        <li>
+          <a href="./about/">
+            <span class="icon">👋</span>
+            About
+          </a>
+        </li>
+        <li>
+          <a href="./resume.pdf" target="_blank">
+            <span class="icon">📄</span>
+            Resume
+          </a>
+        </li>
+      </ul>
+
+      <div class="social-row">
+        <a href="https://github.com/yourusername" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://twitter.com/yourhandle" target="_blank" rel="noopener">X</a>
+        <a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="mailto:you@example.com">Email</a>
+      </div>
+      <p class="hint">Drag to look around · Leaves react to touch</p>
+    </div>
+  </div>
+
+  <!-- Three.js + animation (ES modules) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.154.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.154.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from "three";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+    // ---------- Device detection (user-agent based) ----------
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(ua)
+      || (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
+    document.body.classList.add(isMobile ? "mobile" : "desktop");
+
+    // ---------- Shaders ----------
+    const leavesVS = /* glsl */`
+      uniform sampler2D uNoiseMap;
+      uniform vec3 uBoxMin, uBoxSize, uRaycast;
+      uniform float uTime;
+      varying vec3 vObjectPos, vNormal, vWorldNormal;
+      varying float vCloseToGround;
+
+      vec4 getTriplanar(sampler2D tex) {
+        vec4 xPixel = texture(tex, (vObjectPos.xy + uTime) / 3.);
+        vec4 yPixel = texture(tex, (vObjectPos.yz + uTime) / 3.);
+        vec4 zPixel = texture(tex, (vObjectPos.zx + uTime) / 3.);
+        vec4 combined = (xPixel + yPixel + zPixel) / 6.0;
+        combined.xyz = combined.xyz * vObjectPos;
+        return combined;
+      }
+
+      void main() {
+        mat4 mouseDisplace = mat4(1.);
+        vec3 vWorldPos = vec3(modelMatrix * instanceMatrix * mouseDisplace * vec4(position, 1.));
+        vCloseToGround = clamp(vWorldPos.y, 0., 1.);
+        float offset = clamp(0.8 - distance(uRaycast, instanceMatrix[3].xyz), 0., 999.);
+        offset = (pow(offset, 0.8) / 2.0) * vCloseToGround;
+        mouseDisplace[3].xyz = vec3(offset);
+        vNormal = normalMatrix * mat3(instanceMatrix) * mat3(mouseDisplace) * normalize(normal);
+        vWorldNormal = vec3(modelMatrix * instanceMatrix * mouseDisplace * vec4(normal, 0.));
+        vObjectPos = ((vWorldPos - uBoxMin) * 2.) / uBoxSize - vec3(1.0);
+        vec4 noiseOffset = getTriplanar(uNoiseMap) * vCloseToGround;
+        vec4 newPos = instanceMatrix * mouseDisplace * vec4(position, 1.);
+        newPos.xyz = newPos.xyz + noiseOffset.xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * newPos;
+      }
+    `;
+
+    const leavesFS = /* glsl */`
+      #include <common>
+      #include <lights_pars_begin>
+      uniform vec3 uColorA, uColorB, uColorC;
+      uniform float uTime;
+      varying vec3 vObjectPos, vNormal, vWorldNormal;
+      varying float vCloseToGround;
+
+      vec3 mix3(vec3 v1, vec3 v2, vec3 v3, float fa) {
+        vec3 m;
+        fa > 0.7 ? m = mix(v2, v3, (fa - .5) * 2.) : m = mix(v1, v2, fa * 2.);
+        return m;
+      }
+
+      float getPosColors() {
+        float p = 0.;
+        p = smoothstep(0.2, 0.8, distance(vec3(0.), vObjectPos));
+        p = p * (-(vWorldNormal.g / 2.) + 0.5) * (-vObjectPos.y / 9. + 0.5);
+        return p;
+      }
+
+      float getDiffuse() {
+        float intensity = 0.;
+        for (int i = 0; i < directionalLights.length(); i++) {
+          intensity = dot(directionalLights[i].direction, vNormal);
+          intensity = smoothstep(0.55, 1., intensity) * 0.2
+                    + pow(smoothstep(0.55, 1., intensity), 0.5);
+        }
+        return intensity;
+      }
+
+      void main() {
+        float gradMap = (getPosColors() + getDiffuse()) * vCloseToGround / 2.;
+        vec4 c = vec4(mix3(uColorA, uColorB, uColorC, gradMap), 1.0);
+        gl_FragColor = vec4(pow(c.xyz, vec3(0.454545)), c.w);
+      }
+    `;
+
+    // ---------- Scene setup ----------
+    const scene = new THREE.Scene();
+    const loader = new GLTFLoader();
+    const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.001, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    const controls = new OrbitControls(camera, renderer.domElement);
+    const dummy = new THREE.Object3D();
+    const matrix = new THREE.Matrix4();
+    const pointer = new THREE.Vector2();
+    const raycaster = new THREE.Raycaster();
+    const dlight01 = new THREE.DirectionalLight(0xcccccc, 1.8);
+    const tree = { group: new THREE.Group() };
+
+    const noiseMap = new THREE.TextureLoader().load(
+      "https://raw.githubusercontent.com/ceramicSoda/treeshader/main/assets/noise.png"
+    );
+    const rayPlane = new THREE.Mesh(new THREE.PlaneGeometry(100, 100, 1, 1), undefined);
+
+    const leavesMat = new THREE.ShaderMaterial({
+      lights: true,
+      side: THREE.DoubleSide,
+      uniforms: {
+        ...THREE.UniformsLib.lights,
+        uTime: { value: 0 },
+        uColorA: { value: new THREE.Color(0xb45252) },
+        uColorB: { value: new THREE.Color(0xd3a068) },
+        uColorC: { value: new THREE.Color(0xede19e) },
+        uBoxMin: { value: new THREE.Vector3(0, 0, 0) },
+        uBoxSize: { value: new THREE.Vector3(10, 10, 10) },
+        uRaycast: { value: new THREE.Vector3(0, 0, 0) },
+        uNoiseMap: { value: noiseMap },
+      },
+      vertexShader: leavesVS,
+      fragmentShader: leavesFS,
+    });
+
+    // Load tree model
+    loader.load(
+      "https://raw.githubusercontent.com/ceramicSoda/treeshader/main/assets/tree.glb",
+      (obj) => {
+        tree.pole = obj.scene.getObjectByName("Pole");
+        if (tree.pole) {
+          tree.pole.material = new THREE.MeshToonMaterial({
+            map: tree.pole.material.map || null,
+            color: 0x5c4033,
+          });
+        }
+
+        tree.crown = obj.scene.getObjectByName("Leaves");
+        tree.bbox = new THREE.Box3().setFromObject(tree.crown);
+        leavesMat.uniforms.uBoxMin.value.copy(tree.bbox.min);
+        leavesMat.uniforms.uBoxSize.value.copy(tree.bbox.getSize(new THREE.Vector3()));
+        tree.leavesCount = tree.crown.geometry.attributes.position.count;
+        tree.deadID = [];
+
+        tree.leafGeometry = obj.scene.getObjectByName("Leaf").geometry;
+        tree.leaves = new THREE.InstancedMesh(tree.leafGeometry, leavesMat, tree.leavesCount);
+
+        for (let i = 0; i < tree.leavesCount; i++) {
+          dummy.position.x = tree.crown.geometry.attributes.position.array[i * 3];
+          dummy.position.y = tree.crown.geometry.attributes.position.array[i * 3 + 1];
+          dummy.position.z = tree.crown.geometry.attributes.position.array[i * 3 + 2];
+          dummy.lookAt(
+            dummy.position.x + tree.crown.geometry.attributes.normal.array[i * 3],
+            dummy.position.y + tree.crown.geometry.attributes.normal.array[i * 3 + 1],
+            dummy.position.z + tree.crown.geometry.attributes.normal.array[i * 3 + 2]
+          );
+          const s = Math.random() * 0.2 + 0.8;
+          dummy.scale.set(s, s, s);
+          dummy.updateMatrix();
+          tree.leaves.setMatrixAt(i, dummy.matrix);
+        }
+
+        tree.group.add(tree.pole, tree.leaves);
+        for (let i = 0; i < 16; i++) {
+          tree.deadID.push(Math.floor(Math.random() * tree.leavesCount));
+        }
+      },
+      undefined,
+      (err) => console.error("Failed to load tree model:", err)
+    );
+
+    // Init renderer & camera
+    document.body.appendChild(renderer.domElement);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setAnimationLoop(animate);
+
+    dlight01.position.set(3, 6, -3);
+    dlight01.lookAt(0, 2.4, 0);
+    rayPlane.visible = false;
+
+    camera.position.set(-7, 1, -12);
+    controls.target.set(0, 2.4, 0);
+    controls.maxPolarAngle = Math.PI * 0.5;
+    controls.enableDamping = true;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.6;
+    controls.enablePan = false;
+    controls.touches = { TWO: THREE.TOUCH.ROTATE };
+
+    scene.add(dlight01, tree.group, rayPlane);
+    noiseMap.wrapS = THREE.RepeatWrapping;
+    noiseMap.wrapT = THREE.RepeatWrapping;
+
+    // Animation loop
+    function animate() {
+      leavesMat.uniforms.uTime.value += 0.01;
+
+      if (tree.deadID && tree.leaves) {
+        tree.deadID = tree.deadID.map((i) => {
+          if (i === undefined) return undefined;
+          tree.leaves.getMatrixAt(i, matrix);
+          matrix.decompose(dummy.position, dummy.rotation, dummy.scale);
+          if (dummy.position.y > 0) {
+            dummy.position.y -= 0.04;
+            dummy.position.x += Math.random() / 5 - 0.11;
+            dummy.position.z += Math.random() / 5 - 0.11;
+            dummy.rotation.x += 0.2;
+            dummy.updateMatrix();
+            tree.leaves.setMatrixAt(i, dummy.matrix);
+            return i;
+          }
+          return undefined;
+        }).filter((i) => i !== undefined);
+        tree.leaves.instanceMatrix.needsUpdate = true;
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // Events
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function pointerMove(e) {
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      pointer.set(
+        (clientX / window.innerWidth) * 2 - 1,
+        -(clientY / window.innerHeight) * 2 + 1
+      );
+      raycaster.setFromCamera(pointer, camera);
+      const intersects = raycaster.intersectObjects(
+        tree.leaves ? [tree.leaves, rayPlane] : [rayPlane]
+      );
+      if (intersects[0]) {
+        rayPlane.position.copy(intersects[0].point);
+        rayPlane.position.multiplyScalar(0.9);
+        rayPlane.lookAt(camera.position);
+        leavesMat.uniforms.uRaycast.value.copy(intersects[0].point);
+        if (Math.random() * 5 > 3 && intersects[0].instanceId !== undefined) {
+          tree.deadID.push(intersects[0].instanceId);
+        }
+      } else {
+        leavesMat.uniforms.uRaycast.value.set(99, 99, 99);
+      }
+    }
+
+    document.addEventListener("mousemove", pointerMove);
+    document.addEventListener("touchmove", pointerMove, { passive: true });
+
+    // Randomly drop leaves over time
+    function killRandom() {
+      if (tree.leavesCount) {
+        tree.deadID.push(Math.floor(Math.random() * tree.leavesCount));
+      }
+      setTimeout(killRandom, Math.random() * 1500 + 400);
+    }
+    killRandom();
+  </script>
+</body>
+</html>
