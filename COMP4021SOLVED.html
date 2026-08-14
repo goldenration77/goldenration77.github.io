@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COMP4021 Ideal Solution Whitepaper | Programming in C</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root {
+    --bg: #0b1220;
+    --surface: #141c2e;
+    --surface2: #1c2740;
+    --border: #2a3655;
+    --text: #e8eefc;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --success: #34d399;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --code-bg: #0f172a;
+    --radius: 12px;
+    --shadow: 0 10px 40px rgba(0,0,0,0.45);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    overflow-x: hidden;
+  }
+  /* Ambient background */
+  .bg-grid {
+    position: fixed; inset: 0; z-index: -2;
+    background-image:
+      linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  #three-canvas {
+    position: fixed; top: 0; right: 0; width: 420px; height: 420px;
+    z-index: -1; opacity: 0.55; pointer-events: none;
+  }
+  /* Layout */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem 4rem; }
+  header.hero {
+    padding: 3.5rem 0 2.5rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #0b1220;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #fff 30%, var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle { color: var(--muted); margin-top: 0.75rem; font-size: 1.05rem; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 1.25rem;
+    margin-top: 1.5rem; font-size: 0.9rem; color: var(--muted);
+  }
+  .meta span { display: flex; align-items: center; gap: 0.4rem; }
+  .meta strong { color: var(--text); }
+  /* Nav */
+  nav.toc {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(11,18,32,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 0;
+    margin: 0 -1.5rem;
+    padding-left: 1.5rem; padding-right: 1.5rem;
+  }
+  .toc-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; gap: 0.5rem; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .toc-inner::-webkit-scrollbar { display: none; }
+  .toc a {
+    white-space: nowrap;
+    padding: 0.45rem 0.9rem;
+    border-radius: 8px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .toc a:hover, .toc a.active {
+    background: var(--surface2);
+    color: var(--accent);
+  }
+  /* Sections */
+  section { margin-top: 3.5rem; }
+  .section-header {
+    display: flex; align-items: baseline; gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header h2 {
+    font-size: 1.55rem;
+    font-weight: 700;
+  }
+  .marks {
+    font-size: 0.8rem;
+    background: var(--surface2);
+    color: var(--accent);
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow);
+    transition: border-color 0.25s;
+  }
+  .card:hover { border-color: #3b4a6b; }
+  .q-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .q-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #f1f5f9;
+  }
+  .answer {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .answer strong { color: var(--text); }
+  /* Code blocks */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    position: relative;
+  }
+  pre .lang {
+    position: absolute; top: 0.5rem; right: 0.75rem;
+    font-size: 0.7rem; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  code { font-family: inherit; }
+  .kw { color: #c084fc; }
+  .type { color: #38bdf8; }
+  .str { color: #34d399; }
+  .num { color: #fbbf24; }
+  .cm { color: #64748b; font-style: italic; }
+  .fn { color: #67e8f9; }
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.65rem 0.9rem;
+    text-align: left;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  tr:nth-child(even) td { background: rgba(28,39,64,0.4); }
+  /* Mermaid */
+  .mermaid {
+    background: var(--code-bg);
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 1.25rem 0;
+    text-align: center;
+  }
+  /* Charts */
+  .chart-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin: 1.5rem 0;
+  }
+  .chart-box h4 {
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    color: var(--muted);
+  }
+  .chart-wrap { position: relative; height: 260px; }
+  /* Grid for short notes */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.25rem;
+  }
+  /* Callouts */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(56,189,248,0.07);
+    padding: 0.9rem 1.1rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1rem 0;
+    font-size: 0.92rem;
+  }
+  .callout.warning { border-color: var(--warning); background: rgba(251,191,36,0.07); }
+  .callout.success { border-color: var(--success); background: rgba(52,211,153,0.07); }
+  /* Footer */
+  footer {
+    margin-top: 4rem;
+    padding: 2rem 0;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  /* Toggle answers */
+  .toggle-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 0.35rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-bottom: 0.75rem;
+  }
+  .toggle-btn:hover { background: #243052; }
+  /* Responsive */
+  @media (max-width: 700px) {
+    #three-canvas { display: none; }
+    .meta { flex-direction: column; gap: 0.4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<canvas id="three-canvas"></canvas>
+
+<div class="container">
+  <header class="hero">
+    <div class="badge">Ideal Solution Whitepaper</div>
+    <h1>COMP4021 — Programming in C</h1>
+    <p class="subtitle">3 Yr. Degree / 4 Yr. Honours · 4th Semester Examination, 2025 (CCFUP)</p>
+    <div class="meta">
+      <span>Subject: <strong>Computer Science</strong></span>
+      <span>Course: <strong>COMP4021 (MINOR)</strong></span>
+      <span>Time: <strong>2 Hours</strong></span>
+      <span>Full Marks: <strong>40</strong></span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-inner">
+      <a href="#sec1">Q1 · Short (2×5)</a>
+      <a href="#sec2">Q2 · Medium (5×2)</a>
+      <a href="#sec3">Q3 · Long (10×2)</a>
+      <a href="#notes">Short Notes</a>
+      <a href="#viz">Visualizations</a>
+      <a href="#summary">Score Map</a>
+    </div>
+  </nav>
+
+  <!-- ===================== SECTION 1 ===================== -->
+  <section id="sec1">
+    <div class="section-header">
+      <h2>1. Answer any five questions</h2>
+      <span class="marks">2 × 5 = 10</span>
+    </div>
+
+    <!-- 1a -->
+    <div class="card">
+      <div class="q-label">Question 1(a)</div>
+      <div class="q-text">How do you declare an array of structures?</div>
+      <div class="answer">
+        <p>An array of structures is declared by first defining a structure type and then declaring an array of that type.</p>
+        <pre><span class="lang">C</span><span class="kw">struct</span> <span class="type">Student</span> {
+    <span class="type">char</span> name[<span class="num">50</span>];
+    <span class="type">int</span> roll;
+    <span class="type">float</span> marks;
+};
+
+<span class="cm">/* Declare an array that can hold 30 Student structures */</span>
+<span class="kw">struct</span> <span class="type">Student</span> class[<span class="num">30</span>];
+
+<span class="cm">/* Declare and initialize three Student structures at once */</span>
+<span class="kw">struct</span> <span class="type">Student</span> s[<span class="num">3</span>] = {
+    {<span class="str">"Alice"</span>, <span class="num">101</span>, <span class="num">92.5</span>},
+    {<span class="str">"Bob"</span>,   <span class="num">102</span>, <span class="num">88.0</span>},
+    {<span class="str">"Carol"</span>, <span class="num">103</span>, <span class="num">95.5</span>}
+};</pre>
+        <div class="callout">Access members with <code>class[i].roll</code> or <code>s[i].name</code>. The array itself occupies contiguous memory; each element is a complete structure instance.</div>
+      </div>
+    </div>
+
+    <!-- 1b -->
+    <div class="card">
+      <div class="q-label">Question 1(b)</div>
+      <div class="q-text">Explain the purpose of preprocessor directives in C.</div>
+      <div class="answer">
+        <p>Preprocessor directives are instructions processed <strong>before</strong> actual compilation. They begin with <code>#</code> and are handled by the C preprocessor (cpp).</p>
+        <table>
+          <tr><th>Directive</th><th>Purpose</th></tr>
+          <tr><td><code>#include</code></td><td>Insert header file contents (e.g., <code>&lt;stdio.h&gt;</code>)</td></tr>
+          <tr><td><code>#define</code></td><td>Create macros / symbolic constants</td></tr>
+          <tr><td><code>#ifdef / #ifndef / #endif</code></td><td>Conditional compilation</td></tr>
+          <tr><td><code>#pragma</code></td><td>Compiler-specific instructions</td></tr>
+          <tr><td><code>#undef</code></td><td>Remove a macro definition</td></tr>
+        </table>
+        <p>They enable modular code, portability, compile-time configuration and avoid repeated typing of constants.</p>
+      </div>
+    </div>
+
+    <!-- 1c -->
+    <div class="card">
+      <div class="q-label">Question 1(c)</div>
+      <div class="q-text">What is type casting? Give an example.</div>
+      <div class="answer">
+        <p><strong>Type casting</strong> is the explicit conversion of a value from one data type to another.</p>
+        <pre><span class="lang">C</span><span class="type">int</span> a = <span class="num">7</span>, b = <span class="num">2</span>;
+<span class="type">float</span> result = (<span class="type">float</span>)a / b;   <span class="cm">/* Cast forces floating-point division → 3.5 */</span>
+printf(<span class="str">"%.1f"</span>, result);</pre>
+        <p>Syntax: <code>(target_type) expression</code>. Without the cast, integer division truncates; the cast forces floating-point arithmetic.</p>
+      </div>
+    </div>
+
+    <!-- 1d -->
+    <div class="card">
+      <div class="q-label">Question 1(d)</div>
+      <div class="q-text">Differentiate between = and == operators.</div>
+      <div class="answer">
+        <table>
+          <tr><th>Aspect</th><th><code>=</code> (Assignment)</th><th><code>==</code> (Equality)</th></tr>
+          <tr><td>Purpose</td><td>Stores a value into a variable</td><td>Compares two values for equality</td></tr>
+          <tr><td>Result</td><td>The assigned value itself</td><td>1 (true) or 0 (false)</td></tr>
+          <tr><td>Example</td><td><code>x = 5;</code></td><td><code>if (x == 5)</code></td></tr>
+          <tr><td>Common bug</td><td>Using <code>=</code> inside <code>if</code> by mistake</td><td>—</td></tr>
+        </table>
+        <div class="callout warning">Classic mistake: <code>if (x = 0)</code> always evaluates to false because the assignment yields 0.</div>
+      </div>
+    </div>
+
+    <!-- 1e -->
+    <div class="card">
+      <div class="q-label">Question 1(e)</div>
+      <div class="q-text">Write the syntax for a do-while loop.</div>
+      <div class="answer">
+        <pre><span class="lang">C</span><span class="kw">do</span> {
+    <span class="cm">/* Body executes at least once before condition is tested */</span>
+} <span class="kw">while</span> (condition);</pre>
+        <p>Key property: the body executes <strong>at least once</strong>, then the condition is tested. Contrast with <code>while</code> which may never enter the body.</p>
+      </div>
+    </div>
+
+    <!-- 1f -->
+    <div class="card">
+      <div class="q-label">Question 1(f)</div>
+      <div class="q-text">List any two string handling functions with their purpose.</div>
+      <div class="answer">
+        <table>
+          <tr><th>Function</th><th>Header</th><th>Purpose</th></tr>
+          <tr><td><code>strlen(s)</code></td><td><code>&lt;string.h&gt;</code></td><td>Returns length of string (excluding <code>'\0'</code>)</td></tr>
+          <tr><td><code>strcpy(dest, src)</code></td><td><code>&lt;string.h&gt;</code></td><td>Copies <code>src</code> into <code>dest</code></td></tr>
+          <tr><td><code>strcmp(s1, s2)</code></td><td><code>&lt;string.h&gt;</code></td><td>Lexicographic comparison; 0 if equal</td></tr>
+          <tr><td><code>strcat(dest, src)</code></td><td><code>&lt;string.h&gt;</code></td><td>Appends <code>src</code> to end of <code>dest</code></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 1g -->
+    <div class="card">
+      <div class="q-label">Question 1(g)</div>
+      <div class="q-text">What are the different file opening modes in C?</div>
+      <div class="answer">
+        <table>
+          <tr><th>Mode</th><th>Meaning</th></tr>
+          <tr><td><code>"r"</code></td><td>Read (file must exist)</td></tr>
+          <tr><td><code>"w"</code></td><td>Write (creates / truncates)</td></tr>
+          <tr><td><code>"a"</code></td><td>Append (creates if needed)</td></tr>
+          <tr><td><code>"r+"</code></td><td>Read + Write (must exist)</td></tr>
+          <tr><td><code>"w+"</code></td><td>Read + Write (creates / truncates)</td></tr>
+          <tr><td><code>"a+"</code></td><td>Read + Append</td></tr>
+          <tr><td><code>"rb" / "wb" / …</code></td><td>Binary counterparts</td></tr>
+        </table>
+        <p>Opened with <code>FILE *fp = fopen("file.txt", "r");</code></p>
+      </div>
+    </div>
+
+    <!-- 1h -->
+    <div class="card">
+      <div class="q-label">Question 1(h)</div>
+      <div class="q-text">What is the difference between break and continue statement?</div>
+      <div class="answer">
+        <table>
+          <tr><th>Statement</th><th>Effect</th></tr>
+          <tr><td><code>break</code></td><td>Immediately exits the innermost loop or <code>switch</code></td></tr>
+          <tr><td><code>continue</code></td><td>Skips remaining statements of current iteration and jumps to next iteration</td></tr>
+        </table>
+        <pre><span class="lang">C</span><span class="kw">for</span> (<span class="type">int</span> i = <span class="num">1</span>; i &lt;= <span class="num">5</span>; i++) {
+    <span class="kw">if</span> (i == <span class="num">3</span>) <span class="kw">continue</span>;   <span class="cm">/* Skip rest of this iteration (skip printing 3) */</span>
+    <span class="kw">if</span> (i == <span class="num">5</span>) <span class="kw">break</span>;      <span class="cm">/* Exit the loop completely */</span>
+    printf(<span class="str">"%d "</span>, i);         <span class="cm">/* Output: 1 2 4 */</span>
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SECTION 2 ===================== -->
+  <section id="sec2">
+    <div class="section-header">
+      <h2>2. Answer any two questions</h2>
+      <span class="marks">5 × 2 = 10</span>
+    </div>
+
+    <!-- 2a -->
+    <div class="card">
+      <div class="q-label">Question 2(a)</div>
+      <div class="q-text">Write a program to find the largest of three numbers using nested if-else statements.</div>
+      <div class="answer">
+        <pre><span class="lang">C</span><span class="kw">#include</span> &lt;stdio.h&gt;
+
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> a, b, c, largest;
+    printf(<span class="str">"Enter three numbers: "</span>);
+    scanf(<span class="str">"%d %d %d"</span>, &amp;a, &amp;b, &amp;c);
+
+    <span class="kw">if</span> (a &gt;= b) {
+        <span class="kw">if</span> (a &gt;= c)
+            largest = a;
+        <span class="kw">else</span>
+            largest = c;
+    } <span class="kw">else</span> {
+        <span class="kw">if</span> (b &gt;= c)
+            largest = b;
+        <span class="kw">else</span>
+            largest = c;
+    }
+    printf(<span class="str">"Largest = %d\n"</span>, largest);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+        <div class="mermaid">
+flowchart TD
+    A[Start] --> B[Read a, b, c]
+    B --> C{a greater than or equal to b?}
+    C -->|Yes| D{a greater than or equal to c?}
+    C -->|No| E{b greater than or equal to c?}
+    D -->|Yes| F[largest = a]
+    D -->|No| G[largest = c]
+    E -->|Yes| H[largest = b]
+    E -->|No| I[largest = c]
+    F --> J[Print largest]
+    G --> J
+    H --> J
+    I --> J
+    J --> K[End]
+        </div>
+      </div>
+    </div>
+
+    <!-- 2b -->
+    <div class="card">
+      <div class="q-label">Question 2(b)</div>
+      <div class="q-text">Write a recursive function to find the factorial of a given number.</div>
+      <div class="answer">
+        <pre><span class="lang">C</span><span class="kw">#include</span> &lt;stdio.h&gt;
+
+<span class="type">long</span> <span class="fn">factorial</span>(<span class="type">int</span> n) {
+    <span class="kw">if</span> (n == <span class="num">0</span> || n == <span class="num">1</span>)
+        <span class="kw">return</span> <span class="num">1</span>;                 <span class="cm">/* Base case: 0! = 1! = 1 */</span>
+    <span class="kw">return</span> n * factorial(n - <span class="num">1</span>);  <span class="cm">/* Recursive step: n! = n * (n-1)! */</span>
+}
+
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> num;
+    printf(<span class="str">"Enter a non-negative integer: "</span>);
+    scanf(<span class="str">"%d"</span>, &amp;num);
+    <span class="kw">if</span> (num &lt; <span class="num">0</span>) {
+        printf(<span class="str">"Factorial not defined for negative numbers.\n"</span>);
+        <span class="kw">return</span> <span class="num">1</span>;
+    }
+    printf(<span class="str">"Factorial of %d = %ld\n"</span>, num, factorial(num));
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+        <div class="callout success">Time complexity O(n), space O(n) due to call stack. For large n prefer iterative or big-integer libraries.</div>
+      </div>
+    </div>
+
+    <!-- 2c -->
+    <div class="card">
+      <div class="q-label">Question 2(c)</div>
+      <div class="q-text">Discuss Rules for C identifiers.</div>
+      <div class="answer">
+        <ol style="margin-left:1.3rem; color:var(--muted);">
+          <li>Must begin with a letter (A–Z, a–z) or underscore <code>_</code>.</li>
+          <li>Subsequent characters may be letters, digits (0–9) or underscore.</li>
+          <li>No spaces, special symbols (@, #, $, %, etc.) allowed.</li>
+          <li>Case-sensitive: <code>Count</code> ≠ <code>count</code>.</li>
+          <li>Cannot be a C keyword (<code>int</code>, <code>while</code>, <code>return</code> …).</li>
+          <li>Length: first 31 characters significant in most compilers (C99+ allows longer).</li>
+          <li>Should be meaningful (good practice, not a language rule).</li>
+        </ol>
+        <p style="margin-top:0.8rem;"><strong>Valid:</strong> <code>_count</code>, <code>sum2</code>, <code>max_value</code><br>
+        <strong>Invalid:</strong> <code>2sum</code>, <code>max-value</code>, <code>float</code>, <code>my var</code></p>
+      </div>
+    </div>
+
+    <!-- 2d -->
+    <div class="card">
+      <div class="q-label">Question 2(d)</div>
+      <div class="q-text">What is pointer? Explain the difference between call by value and call by reference.</div>
+      <div class="answer">
+        <p>A <strong>pointer</strong> is a variable that stores the memory address of another variable.</p>
+        <pre><span class="lang">C</span><span class="type">int</span> x = <span class="num">10</span>;
+<span class="type">int</span> *p = &amp;x;   <span class="cm">/* p stores the memory address of x */</span>
+printf(<span class="str">"%d"</span>, *p); <span class="cm">/* Dereference: follow the address to get the value 10 */</span></pre>
+        <table>
+          <tr><th>Aspect</th><th>Call by Value</th><th>Call by Reference</th></tr>
+          <tr><td>What is passed</td><td>Copy of the value</td><td>Address (pointer) of the variable</td></tr>
+          <tr><td>Original changed?</td><td>No</td><td>Yes</td></tr>
+          <tr><td>Syntax</td><td><code>void f(int x)</code></td><td><code>void f(int *x)</code></td></tr>
+          <tr><td>Call site</td><td><code>f(a);</code></td><td><code>f(&amp;a);</code></td></tr>
+        </table>
+        <pre><span class="lang">C</span><span class="cm">/* Call-by-value: receives copies; original variables stay unchanged */</span>
+<span class="type">void</span> <span class="fn">swap_val</span>(<span class="type">int</span> a, <span class="type">int</span> b) {
+    <span class="type">int</span> t = a; a = b; b = t;
+}
+
+<span class="cm">/* Call-by-reference: receives addresses; changes affect the originals */</span>
+<span class="type">void</span> <span class="fn">swap_ref</span>(<span class="type">int</span> *a, <span class="type">int</span> *b) {
+    <span class="type">int</span> t = *a; *a = *b; *b = t;
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SECTION 3 ===================== -->
+  <section id="sec3">
+    <div class="section-header">
+      <h2>3. Answer any two questions</h2>
+      <span class="marks">10 × 2 = 20</span>
+    </div>
+
+    <!-- 3a -->
+    <div class="card">
+      <div class="q-label">Question 3(a) — Part (i)</div>
+      <div class="q-text">Write a C program to print a multiplication table using for loop.</div>
+      <div class="answer">
+        <pre><span class="lang">C</span><span class="kw">#include</span> &lt;stdio.h&gt;
+
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n, i;
+    printf(<span class="str">"Enter a number: "</span>);
+    scanf(<span class="str">"%d"</span>, &amp;n);
+    printf(<span class="str">"Multiplication table of %d:\n"</span>, n);
+    <span class="kw">for</span> (i = <span class="num">1</span>; i &lt;= <span class="num">10</span>; i++) {
+        printf(<span class="str">"%d × %d = %d\n"</span>, n, i, n * i);
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Question 3(a) — Part (ii)</div>
+      <div class="q-text">Write a C program to swap two numbers using pointers.</div>
+      <div class="answer">
+        <pre><span class="lang">C</span><span class="kw">#include</span> &lt;stdio.h&gt;
+
+<span class="type">void</span> <span class="fn">swap</span>(<span class="type">int</span> *x, <span class="type">int</span> *y) {
+    <span class="type">int</span> temp = *x;
+    *x = *y;
+    *y = temp;
+}
+
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> a, b;
+    printf(<span class="str">"Enter two numbers: "</span>);
+    scanf(<span class="str">"%d %d"</span>, &amp;a, &amp;b);
+    printf(<span class="str">"Before swap: a = %d, b = %d\n"</span>, a, b);
+    swap(&amp;a, &amp;b);
+    printf(<span class="str">"After  swap: a = %d, b = %d\n"</span>, a, b);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+        <div class="mermaid">
+flowchart LR
+    A["a = 5"] --> C["swap(&a, &b)"]
+    B["b = 9"] --> C
+    C --> D["Exchange values via *x and *y"]
+    D --> E["a = 9"]
+    D --> F["b = 5"]
+        </div>
+      </div>
+    </div>
+
+    <!-- 3b -->
+    <div class="card">
+      <div class="q-label">Question 3(b) — Part (i)</div>
+      <div class="q-text">Explain how arrays are declared, initialized and processed in C.</div>
+      <div class="answer">
+        <p><strong>Declaration</strong></p>
+        <pre><span class="lang">C</span><span class="type">int</span> arr[<span class="num">5</span>];               <span class="cm">/* Size must be a compile-time constant */</span>
+<span class="type">float</span> marks[<span class="num">100</span>];
+<span class="type">char</span> name[<span class="num">30</span>];</pre>
+        <p><strong>Initialization</strong></p>
+        <pre><span class="lang">C</span><span class="type">int</span> a[<span class="num">5</span>] = {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>};
+<span class="type">int</span> b[]  = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>};     <span class="cm">/* Compiler infers size = 3 */</span>
+<span class="type">int</span> c[<span class="num">5</span>] = {<span class="num">1</span>, <span class="num">2</span>};        <span class="cm">/* Remaining elements are zero-filled */</span>
+<span class="type">char</span> s[] = <span class="str">"Hello"</span>;       <span class="cm">/* Null terminator '\0' is added automatically */</span></pre>
+        <p><strong>Processing</strong> — almost always with loops:</p>
+        <pre><span class="lang">C</span><span class="cm">/* Traverse the array and print each element */</span>
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++)
+    printf(<span class="str">"%d "</span>, a[i]);
+
+<span class="cm">/* Compute the sum of all elements */</span>
+<span class="type">int</span> sum = <span class="num">0</span>;
+<span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++)
+    sum += a[i];</pre>
+        <div class="callout">Array name decays to pointer to first element. Bounds are not checked by the language — out-of-range access is undefined behaviour.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Question 3(b) — Part (ii)</div>
+      <div class="q-text">Write a program to sort an array of integers.</div>
+      <div class="answer">
+        <p>Classic Bubble Sort (simple &amp; exam-friendly):</p>
+        <pre><span class="lang">C</span><span class="kw">#include</span> &lt;stdio.h&gt;
+
+<span class="type">void</span> <span class="fn">bubbleSort</span>(<span class="type">int</span> arr[], <span class="type">int</span> n) {
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n - <span class="num">1</span>; i++) {
+        <span class="kw">for</span> (<span class="type">int</span> j = <span class="num">0</span>; j &lt; n - i - <span class="num">1</span>; j++) {
+            <span class="kw">if</span> (arr[j] &gt; arr[j + <span class="num">1</span>]) {
+                <span class="type">int</span> temp = arr[j];
+                arr[j] = arr[j + <span class="num">1</span>];
+                arr[j + <span class="num">1</span>] = temp;
+            }
+        }
+    }
+}
+
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> n;
+    printf(<span class="str">"Enter size: "</span>);
+    scanf(<span class="str">"%d"</span>, &amp;n);
+    <span class="type">int</span> a[<span class="num">100</span>];
+    printf(<span class="str">"Enter %d elements: "</span>, n);
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+        scanf(<span class="str">"%d"</span>, &amp;a[i]);
+
+    bubbleSort(a, n);
+
+    printf(<span class="str">"Sorted array: "</span>);
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">0</span>; i &lt; n; i++)
+        printf(<span class="str">"%d "</span>, a[i]);
+    printf(<span class="str">"\n"</span>);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+        <div class="mermaid">
+flowchart TD
+    A["Start with unsorted array"] --> B["Outer pass: i from 0 to n-2"]
+    B --> C["Inner pass: j from 0 to n-i-2"]
+    C --> D{"Is arr j greater than arr j+1?"}
+    D -->|Yes| E["Swap the two elements"]
+    D -->|No| F["Keep order"]
+    E --> G{"More j?"}
+    F --> G
+    G -->|Yes| C
+    G -->|No| H{"More outer passes?"}
+    H -->|Yes| B
+    H -->|No| I["Array is now sorted"]
+        </div>
+      </div>
+    </div>
+
+    <!-- 3c -->
+    <div class="card">
+      <div class="q-label">Question 3(c) — Part (i)</div>
+      <div class="q-text">Explain the syntax of creating function in C in detail, including function prototype, definition and calling.</div>
+      <div class="answer">
+        <p><strong>1. Function Prototype (declaration)</strong> — tells the compiler the signature before use:</p>
+        <pre><span class="lang">C</span><span class="type">return_type</span> <span class="fn">function_name</span>(parameter_list);</pre>
+        <p><strong>2. Function Definition</strong> — the actual body:</p>
+        <pre><span class="lang">C</span><span class="type">return_type</span> <span class="fn">function_name</span>(parameter_list) {
+    <span class="cm">/* Function body: statements that perform the work */</span>
+    <span class="kw">return</span> value;   <span class="cm">/* Required only when return type is not void */</span>
+}</pre>
+        <p><strong>3. Function Call</strong></p>
+        <pre><span class="lang">C</span>variable = <span class="fn">function_name</span>(arguments);</pre>
+        <p>Complete example:</p>
+        <pre><span class="lang">C</span><span class="kw">#include</span> &lt;stdio.h&gt;
+
+<span class="cm">/* Function prototype: informs the compiler of the signature */</span>
+<span class="type">int</span> <span class="fn">add</span>(<span class="type">int</span>, <span class="type">int</span>);
+
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> result = add(<span class="num">12</span>, <span class="num">30</span>);   <span class="cm">/* Function call with actual arguments */</span>
+    printf(<span class="str">"%d\n"</span>, result);
+    <span class="kw">return</span> <span class="num">0</span>;
+}
+
+<span class="cm">/* Function definition: the actual implementation */</span>
+<span class="type">int</span> <span class="fn">add</span>(<span class="type">int</span> x, <span class="type">int</span> y) {
+    <span class="kw">return</span> x + y;
+}</pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label">Question 3(c) — Part (ii)</div>
+      <div class="q-text">Write a C program using functions to find prime numbers given as input.</div>
+      <div class="answer">
+        <pre><span class="lang">C</span><span class="kw">#include</span> &lt;stdio.h&gt;
+<span class="kw">#include</span> &lt;math.h&gt;
+
+<span class="cm">/* Helper function: returns 1 (true) if n is prime, otherwise 0 */</span>
+<span class="type">int</span> <span class="fn">isPrime</span>(<span class="type">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="num">1</span>) <span class="kw">return</span> <span class="num">0</span>;
+    <span class="kw">if</span> (n == <span class="num">2</span>) <span class="kw">return</span> <span class="num">1</span>;
+    <span class="kw">if</span> (n % <span class="num">2</span> == <span class="num">0</span>) <span class="kw">return</span> <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="type">int</span> i = <span class="num">3</span>; i &lt;= sqrt(n); i += <span class="num">2</span>) {
+        <span class="kw">if</span> (n % i == <span class="num">0</span>) <span class="kw">return</span> <span class="num">0</span>;
+    }
+    <span class="kw">return</span> <span class="num">1</span>;
+}
+
+<span class="type">int</span> <span class="fn">main</span>() {
+    <span class="type">int</span> num;
+    printf(<span class="str">"Enter a positive integer: "</span>);
+    scanf(<span class="str">"%d"</span>, &amp;num);
+    <span class="kw">if</span> (isPrime(num))
+        printf(<span class="str">"%d is a prime number.\n"</span>, num);
+    <span class="kw">else</span>
+        printf(<span class="str">"%d is not a prime number.\n"</span>, num);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre>
+        <div class="callout">The function can be reused to print all primes in a range by looping over candidates and calling <code>isPrime</code>.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SHORT NOTES ===================== -->
+  <section id="notes">
+    <div class="section-header">
+      <h2>Write short notes (any two)</h2>
+      <span class="marks">5 × 2 = 10</span>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="q-label">Note (i)</div>
+        <div class="q-text">Dynamic Memory Allocation</div>
+        <div class="answer">
+          <p>Memory allocated at run-time from the heap using library functions in <code>&lt;stdlib.h&gt;</code>:</p>
+          <ul style="margin-left:1.2rem; color:var(--muted);">
+            <li><code>malloc(size)</code> — allocates uninitialized block</li>
+            <li><code>calloc(n, size)</code> — allocates zero-initialized array</li>
+            <li><code>realloc(ptr, newsize)</code> — resizes previously allocated block</li>
+            <li><code>free(ptr)</code> — releases memory back to heap</li>
+          </ul>
+          <pre><span class="lang">C</span><span class="type">int</span> *p = (<span class="type">int</span>*)malloc(<span class="num">5</span> * <span class="kw">sizeof</span>(<span class="type">int</span>));
+<span class="kw">if</span> (p == <span class="kw">NULL</span>) { <span class="cm">/* Always check: allocation may fail */</span> }
+<span class="cm">/* Now safely use p[0] through p[4] */</span>
+free(p);   <span class="cm">/* Release the memory when finished */</span></pre>
+          <p>Essential for flexible data structures (linked lists, dynamic arrays). Always check for <code>NULL</code> and free to avoid leaks.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="q-label">Note (ii)</div>
+        <div class="q-text">Loops in C Language</div>
+        <div class="answer">
+          <p>Three primary looping constructs:</p>
+          <table>
+            <tr><th>Loop</th><th>When to use</th></tr>
+            <tr><td><code>for</code></td><td>Known number of iterations</td></tr>
+            <tr><td><code>while</code></td><td>Condition checked before entry</td></tr>
+            <tr><td><code>do-while</code></td><td>Body must run at least once</td></tr>
+          </table>
+          <p>All support <code>break</code>, <code>continue</code> and nested loops. Infinite loop: <code>for(;;)</code> or <code>while(1)</code>.</p>
+          <div class="chart-box" style="margin-top:1rem;">
+            <h4>Typical choice frequency in exam programs</h4>
+            <div class="chart-wrap"><canvas id="loopChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="q-label">Note (iii)</div>
+        <div class="q-text">File operation in C</div>
+        <div class="answer">
+          <p>Core steps:</p>
+          <ol style="margin-left:1.2rem; color:var(--muted);">
+            <li>Declare <code>FILE *fp;</code></li>
+            <li><code>fp = fopen("name", mode);</code></li>
+            <li>Read/Write with <code>fscanf</code>, <code>fprintf</code>, <code>fgets</code>, <code>fputs</code>, <code>fread</code>, <code>fwrite</code></li>
+            <li><code>fclose(fp);</code></li>
+          </ol>
+          <p>Always test <code>fp != NULL</code>. Modes already listed in Q1(g). Binary mode preferred for non-text data.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="q-label">Note (iv)</div>
+        <div class="q-text">Data types in C</div>
+        <div class="answer">
+          <p>Primary categories:</p>
+          <ul style="margin-left:1.2rem; color:var(--muted);">
+            <li><strong>Basic</strong>: <code>int</code>, <code>char</code>, <code>float</code>, <code>double</code>, <code>_Bool</code></li>
+            <li><strong>Derived</strong>: arrays, pointers, structures, unions, functions</li>
+            <li><strong>Enumeration</strong>: <code>enum</code></li>
+            <li><strong>void</strong>: no value / generic pointer</li>
+          </ul>
+          <p>Modifiers: <code>signed</code>, <code>unsigned</code>, <code>short</code>, <code>long</code>. Size is implementation-defined; use <code>sizeof</code> and fixed-width types from <code>&lt;stdint.h&gt;</code> when portability matters.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== VISUALIZATIONS ===================== -->
+  <section id="viz">
+    <div class="section-header">
+      <h2>Concept Visualizations</h2>
+    </div>
+
+    <div class="card">
+      <div class="q-text">Memory Layout of an Array of Structures</div>
+      <div class="mermaid">
+flowchart LR
+    subgraph Memory["Contiguous Memory Block"]
+      direction LR
+      S0["struct[0]<br/>name | roll | marks"]
+      S1["struct[1]<br/>name | roll | marks"]
+      S2["struct[2]<br/>name | roll | marks"]
+      S0 --- S1 --- S2
+    end
+    P["Pointer / Array name"] --> S0
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-text">Call-by-Value vs Call-by-Reference (conceptual)</div>
+      <div class="mermaid">
+sequenceDiagram
+    participant Main
+    participant Val as Function (by value)
+    participant Ref as Function (by ref)
+    Main->>Val: copy of x
+    Note over Val: modifies local copy
+    Val-->>Main: original x unchanged
+    Main->>Ref: address of x
+    Note over Ref: *ptr modifies original
+    Ref-->>Main: original x changed
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <h4>Relative exam weight of major topics (approx.)</h4>
+      <div class="chart-wrap"><canvas id="topicChart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ===================== SUMMARY ===================== -->
+  <section id="summary">
+    <div class="section-header">
+      <h2>Ideal Answer Strategy &amp; Score Map</h2>
+    </div>
+    <div class="card">
+      <div class="answer">
+        <p>To maximise marks under time pressure:</p>
+        <ul style="margin-left:1.2rem; color:var(--muted);">
+          <li><strong>Q1 (10 marks)</strong> — pick the five shortest / most factual answers (operators, do-while syntax, break/continue, string functions, file modes).</li>
+          <li><strong>Q2 (10 marks)</strong> — choose one program (largest of three or factorial) + one theory (identifiers or pointers).</li>
+          <li><strong>Q3 (20 marks)</strong> — one full program pair (multiplication + swap <em>or</em> array explanation + sort) + functions + prime, or mix.</li>
+          <li>Always write clean, indented code; mention headers; handle edge cases briefly.</li>
+          <li>For short notes, ½–¾ page with bullet points + one tiny code snippet is ideal.</li>
+        </ul>
+        <div class="callout success" style="margin-top:1.2rem;">
+          This whitepaper provides complete, exam-ready solutions for <strong>every</strong> question so you can freely choose the combination that best matches your preparation.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>COMP4021 Ideal Solution Whitepaper · Programming in C · 2025 CCFUP</p>
+    <p style="margin-top:0.4rem;">Interactive educational resource · Chart.js · Mermaid · Three.js</p>
+  </footer>
+</div>
+
+<script>
+  // ---------- Mermaid ----------
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#1c2740',
+      primaryTextColor: '#e8eefc',
+      primaryBorderColor: '#38bdf8',
+      lineColor: '#94a3b8',
+      secondaryColor: '#141c2e',
+      tertiaryColor: '#0f172a',
+      background: '#0b1220',
+      mainBkg: '#1c2740',
+      nodeBorder: '#38bdf8',
+      clusterBkg: '#141c2e',
+      titleColor: '#e8eefc',
+      edgeLabelBackground: '#141c2e'
+    },
+    flowchart: { curve: 'basis', htmlLabels: true },
+    sequence: { actorMargin: 40 }
+  });
+
+  // ---------- Chart.js ----------
+  const loopCtx = document.getElementById('loopChart');
+  if (loopCtx) {
+    new Chart(loopCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['for', 'while', 'do-while'],
+        datasets: [{
+          data: [55, 30, 15],
+          backgroundColor: ['#38bdf8', '#818cf8', '#34d399'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+        }
+      }
+    });
+  }
+
+  const topicCtx = document.getElementById('topicChart');
+  if (topicCtx) {
+    new Chart(topicCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Arrays & Structures', 'Pointers & Functions', 'Loops & Control', 'File I/O', 'Memory & Types'],
+        datasets: [{
+          label: 'Approx. marks weight',
+          data: [18, 16, 12, 8, 6],
+          backgroundColor: [
+            'rgba(56,189,248,0.75)',
+            'rgba(129,140,248,0.75)',
+            'rgba(52,211,153,0.75)',
+            'rgba(251,191,36,0.75)',
+            'rgba(248,113,113,0.75)'
+          ],
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { color: '#94a3b8' },
+            grid: { color: 'rgba(42,54,85,0.6)' }
+          },
+          x: {
+            ticks: { color: '#94a3b8', maxRotation: 30 },
+            grid: { display: false }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+
+  // ---------- Three.js ambient scene ----------
+  (function() {
+    const canvas = document.getElementById('three-canvas');
+    if (!canvas) return;
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(420, 420);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.z = 6;
+
+    // Floating cubes representing memory cells / array elements
+    const group = new THREE.Group();
+    const geo = new THREE.BoxGeometry(0.55, 0.55, 0.55);
+    const colors = [0x38bdf8, 0x818cf8, 0x34d399, 0xfbbf24, 0xf87171];
+    for (let i = 0; i < 12; i++) {
+      const mat = new THREE.MeshStandardMaterial({
+        color: colors[i % colors.length],
+        metalness: 0.3,
+        roughness: 0.4,
+        transparent: true,
+        opacity: 0.85
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      const angle = (i / 12) * Math.PI * 2;
+      const radius = 1.8 + (i % 3) * 0.3;
+      mesh.position.set(Math.cos(angle) * radius, Math.sin(angle * 1.3) * 0.9, Math.sin(angle) * radius * 0.6);
+      mesh.userData = { angle, radius, speed: 0.2 + (i % 5) * 0.05 };
+      group.add(mesh);
+    }
+    scene.add(group);
+
+    const light = new THREE.DirectionalLight(0xffffff, 1.1);
+    light.position.set(3, 5, 4);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x404060, 0.7));
+
+    let t = 0;
+    function animate() {
+      requestAnimationFrame(animate);
+      t += 0.008;
+      group.rotation.y = t * 0.4;
+      group.children.forEach((m, i) => {
+        const d = m.userData;
+        m.position.y = Math.sin(t * d.speed + i) * 0.7;
+        m.rotation.x = t * 0.5 + i;
+        m.rotation.z = t * 0.3;
+      });
+      renderer.render(scene, camera);
+    }
+    animate();
+  })();
+
+  // Sticky nav highlight
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.toc a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(sec => {
+      if (pageYOffset >= sec.offsetTop - 120) current = sec.id;
+    });
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  });
+</script>
+</body>
+</html>
