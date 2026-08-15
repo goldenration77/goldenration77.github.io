@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COMP 4021: Programming in C - Course Notes</title>
+  <!-- Mermaid for diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <!-- Chart.js for charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    :root {
+      --primary: #1a365d;
+      --secondary: #2b6cb0;
+      --accent: #38a169;
+      --bg: #f7fafc;
+      --card: #ffffff;
+      --text: #2d3748;
+      --muted: #718096;
+      --border: #e2e8f0;
+      --code-bg: #282c34;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 0;
+    }
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    header h1 { font-size: 2.2rem; margin-bottom: 0.4rem; letter-spacing: -0.5px; }
+    header .subtitle { font-size: 1.15rem; opacity: 0.9; }
+    header .meta { margin-top: 1rem; font-size: 0.95rem; opacity: 0.85; }
+    nav {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    nav a {
+      display: inline-block;
+      margin-right: 1.25rem;
+      color: var(--secondary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      padding: 0.35rem 0;
+    }
+    nav a:hover { color: var(--primary); text-decoration: underline; }
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+    section {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 1.75rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      border: 1px solid var(--border);
+    }
+    h2 {
+      color: var(--primary);
+      font-size: 1.55rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 3px solid var(--secondary);
+      display: inline-block;
+    }
+    h3 {
+      color: var(--secondary);
+      font-size: 1.25rem;
+      margin: 1.5rem 0 0.75rem;
+    }
+    h4 {
+      color: var(--primary);
+      font-size: 1.05rem;
+      margin: 1.1rem 0 0.5rem;
+    }
+    p { margin-bottom: 0.9rem; }
+    ul, ol { margin: 0.6rem 0 1rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+    .badge {
+      display: inline-block;
+      background: var(--secondary);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      margin-left: 0.4rem;
+      vertical-align: middle;
+    }
+    .hours { background: var(--accent); }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+      margin: 1.25rem 0;
+    }
+    .info-card {
+      background: #edf2f7;
+      border-radius: 8px;
+      padding: 1.1rem;
+      border-left: 4px solid var(--secondary);
+    }
+    .info-card h4 { margin-top: 0; color: var(--primary); }
+    /* Code blocks with Highlight.js */
+    pre {
+      margin: 1rem 0;
+      border-radius: 8px;
+      overflow-x: auto;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    pre code.hljs {
+      padding: 1.1rem 1.3rem;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Courier New', monospace;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      border-radius: 8px;
+    }
+    /* Inline code */
+    :not(pre) > code {
+      background: #edf2f7;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      color: #c53030;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.88rem;
+    }
+    .mermaid {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1.25rem 0;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .chart-container {
+      position: relative;
+      height: 320px;
+      margin: 1.5rem auto;
+      max-width: 480px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.65rem 0.9rem;
+      text-align: left;
+    }
+    th { background: var(--primary); color: white; }
+    tr:nth-child(even) { background: #f7fafc; }
+    .practical-list {
+      counter-reset: prac;
+      list-style: none;
+      margin-left: 0;
+    }
+    .practical-list li {
+      counter-increment: prac;
+      margin-bottom: 0.7rem;
+      padding-left: 2.2rem;
+      position: relative;
+    }
+    .practical-list li::before {
+      content: counter(prac);
+      position: absolute;
+      left: 0;
+      top: 0;
+      background: var(--secondary);
+      color: white;
+      width: 1.6rem;
+      height: 1.6rem;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+    .note-box {
+      background: #ebf8ff;
+      border: 1px solid #90cdf4;
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin: 1.2rem 0;
+    }
+    .warning-box {
+      background: #fffaf0;
+      border: 1px solid #fbd38d;
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin: 1.2rem 0;
+    }
+    .tip-box {
+      background: #f0fff4;
+      border: 1px solid #9ae6b4;
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin: 1.2rem 0;
+    }
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.6rem; }
+      section { padding: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>COMP 4021 : Programming in C</h1>
+    <div class="subtitle">Minor Course Notes — Computer Science</div>
+    <div class="meta">Credit: 3 (Theory) + 1 (Practical) &nbsp;|&nbsp; 45 Hrs Theory + 30 Hrs Practical</div>
+  </header>
+
+  <nav>
+    <a href="#overview">Overview</a>
+    <a href="#objectives">Objectives</a>
+    <a href="#outcomes">Outcomes</a>
+    <a href="#syllabus">Syllabus</a>
+    <a href="#basics">Basics</a>
+    <a href="#operators">Operators</a>
+    <a href="#control">Control Flow</a>
+    <a href="#arrays">Arrays</a>
+    <a href="#functions">Functions</a>
+    <a href="#strings">Strings</a>
+    <a href="#structures">Structures</a>
+    <a href="#files">Files</a>
+    <a href="#practicals">Practicals</a>
+    <a href="#charts">Charts</a>
+  </nav>
+
+  <main>
+    <!-- Overview -->
+    <section id="overview">
+      <h2>Course Overview</h2>
+      <p>
+        This course is designed to provide complete knowledge of the <strong>C programming language</strong>.
+        Students will develop logical thinking skills that enable them to create programs and applications in C.
+        Mastering the fundamental programming constructs also makes it easier to switch to any other programming language in the future.
+      </p>
+      <div class="card-grid">
+        <div class="info-card">
+          <h4>Target Audience</h4>
+          <p>Students from other allied disciplines (Minor Course)</p>
+        </div>
+        <div class="info-card">
+          <h4>Credits</h4>
+          <p>Theory: 3 Credits (45 Hours)<br>Practical: 1 Credit (30 Hours)</p>
+        </div>
+        <div class="info-card">
+          <h4>Focus</h4>
+          <p>Problem solving, algorithm design, structured programming, and real-life applications</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Objectives -->
+    <section id="objectives">
+      <h2>Course Objective</h2>
+      <p>
+        The course aims to equip learners with a thorough understanding of C language so that they can:
+      </p>
+      <ul>
+        <li>Develop strong problem-solving skills using top-down design principles</li>
+        <li>Design simple algorithms and draw flowcharts</li>
+        <li>Translate algorithms into working C programs</li>
+        <li>Organize code using functional hierarchical decomposition</li>
+        <li>Solve real-life problems by writing simple yet effective C programs</li>
+      </ul>
+    </section>
+
+    <!-- Learning Outcomes -->
+    <section id="outcomes">
+      <h2>Course Learning Outcomes</h2>
+      <p>After successful completion of the course, a student will be able to:</p>
+      <ol>
+        <li>Develop problem solving skills coupled with top-down design principles.</li>
+        <li>Become skilled at developing simple algorithms and flow charts.</li>
+        <li>Convert the algorithms into simple C programs.</li>
+        <li>Understand code organization and functional hierarchical decomposition.</li>
+        <li>Develop simple C programs for solving real life problems.</li>
+      </ol>
+
+      <h3>Top-Down Design Visualized</h3>
+      <div class="mermaid">
+flowchart TD
+    A[Real-life Problem] --> B[Understand Requirements]
+    B --> C[Break into Sub-problems]
+    C --> D[Design Algorithms / Flowcharts]
+    D --> E[Write Functions]
+    E --> F[Integrate into Main Program]
+    F --> G[Test & Debug]
+    G --> H[Working C Program]
+    style A fill:#2b6cb0,color:#fff
+    style H fill:#38a169,color:#fff
+      </div>
+    </section>
+
+    <!-- Syllabus -->
+    <section id="syllabus">
+      <h2>Syllabus Structure <span class="badge hours">45 Hours</span></h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Unit</th>
+            <th>Topics</th>
+            <th>Hours</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Introduction, Character sets, Keywords, Identifiers, Constants, Variables, Data Types, Program Structure, Operators (Arithmetic, Relational, Logical, Assignment, Increment, Decrement, Conditional), Operator Precedence, Expressions, Type conversion, Formatted I/O</td>
+            <td>15</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Conditional statements, Branching and looping, Arrays</td>
+            <td>15</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Functions (arguments, return values, recursion), String handling, Enumerated data types, Structures, Arrays of structures, Arrays within structures, Unions</td>
+            <td>10</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>File handling: Opening, Closing, I/O operations</td>
+            <td>5</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Basics -->
+    <section id="basics">
+      <h2>1. Introduction to C</h2>
+      
+      <h3>Basic Structure of a C Program</h3>
+      <p>Every C program follows a standard structure. Comments help others (and your future self) understand the code.</p>
+      <pre><code class="language-c">/*
+ * File   : hello.c
+ * Purpose: Demonstrate the basic structure of a C program
+ * Author : COMP 4021 Student
+ */
+
+#include &lt;stdio.h&gt;   /* Preprocessor directive:
+                        Includes the Standard Input/Output library
+                        so we can use printf() and scanf() */
+
+/* Optional: Global variables or function prototypes can go here */
+
+int main(void) {     /* main() is the entry point of every C program.
+                        'void' means main takes no arguments.
+                        Returns an int (exit status to the OS). */
+
+    /* ----- Variable declarations (must come before statements in older C) ----- */
+    int age = 20;                /* Integer variable initialized to 20 */
+    float height = 5.9f;         /* Floating-point variable (f suffix = float literal) */
+    char grade = 'A';            /* Character variable storing a single character */
+
+    /* ----- Executable statements ----- */
+    printf("Hello, World!\n");   /* \n = newline character */
+    printf("Age    : %d\n", age);      /* %d = format specifier for int */
+    printf("Height : %.1f\n", height); /* %.1f = float with 1 decimal place */
+    printf("Grade  : %c\n", grade);    /* %c = format specifier for char */
+
+    return 0;   /* Returning 0 tells the operating system that the program
+                   ended successfully. Non-zero usually means an error. */
+}</code></pre>
+
+      <div class="tip-box">
+        <strong>Tip:</strong> Always write meaningful comments. Explain <em>why</em> something is done, not just <em>what</em> the code does (the code already shows the "what").
+      </div>
+
+      <div class="mermaid">
+flowchart LR
+    A[Preprocessor<br>Directives] --> B[Global Declarations]
+    B --> C[main function]
+    C --> D[Local Variables]
+    D --> E[Statements]
+    E --> F[return]
+    style C fill:#2b6cb0,color:#fff
+      </div>
+
+      <h3>Character Set</h3>
+      <p>Letters (A–Z, a–z), Digits (0–9), Special symbols (<code>+ - * / = &lt; &gt; ! &amp; |</code> etc.), and White spaces (space, tab, newline).</p>
+
+      <h3>Keywords & Identifiers</h3>
+      <ul>
+        <li><strong>Keywords</strong>: Reserved words with special meaning (<code>int</code>, <code>float</code>, <code>if</code>, <code>while</code>, <code>return</code>, <code>for</code>, <code>switch</code>, <code>case</code>, <code>break</code>, <code>continue</code>, <code>void</code>, <code>struct</code>, <code>union</code>, <code>enum</code>, etc.). <em>Cannot</em> be used as identifiers.</li>
+        <li><strong>Identifiers</strong>: Names given to variables, functions, arrays, etc. Rules:
+          <ul>
+            <li>Must start with a letter (A–Z / a–z) or underscore (<code>_</code>)</li>
+            <li>Can contain letters, digits, and underscores</li>
+            <li>Case-sensitive (<code>Age</code> ≠ <code>age</code>)</li>
+            <li>Cannot be a keyword</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>Constants, Variables & Data Types</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Size (typical)</th>
+            <th>Range / Example</th>
+            <th>Format Specifier</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>char</code></td><td>1 byte</td><td>−128 to 127</td><td><code>%c</code></td></tr>
+          <tr><td><code>int</code></td><td>2 or 4 bytes</td><td>−32,768 to 32,767 (2 bytes)</td><td><code>%d</code> or <code>%i</code></td></tr>
+          <tr><td><code>float</code></td><td>4 bytes</td><td>±3.4e−38 to ±3.4e+38</td><td><code>%f</code></td></tr>
+          <tr><td><code>double</code></td><td>8 bytes</td><td>±1.7e−308 to ±1.7e+308</td><td><code>%lf</code></td></tr>
+          <tr><td><code>void</code></td><td>—</td><td>No value</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <pre><code class="language-c">/* Examples of variable declarations and initializations */
+int count = 0;           /* Integer, starts at zero */
+float pi = 3.14159f;     /* Approximate value of π */
+double bigNum = 1.7e10;  /* Scientific notation: 1.7 × 10^10 */
+char ch = 'Z';           /* Single character in single quotes */
+const int MAX = 100;     /* Constant – value cannot be changed later */</code></pre>
+    </section>
+
+    <!-- Operators -->
+    <section id="operators">
+      <h2>2. Operators in C</h2>
+      <h3>Categories of Operators</h3>
+      <ul>
+        <li><strong>Arithmetic</strong>: <code>+</code> <code>-</code> <code>*</code> <code>/</code> <code>%</code> (modulus – remainder)</li>
+        <li><strong>Relational</strong>: <code>==</code> <code>!=</code> <code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code> (result is 1 for true, 0 for false)</li>
+        <li><strong>Logical</strong>: <code>&amp;&amp;</code> (AND) <code>||</code> (OR) <code>!</code> (NOT)</li>
+        <li><strong>Assignment</strong>: <code>=</code> <code>+=</code> <code>-=</code> <code>*=</code> <code>/=</code> <code>%=</code></li>
+        <li><strong>Increment / Decrement</strong>: <code>++</code> <code>--</code> (prefix &amp; postfix)</li>
+        <li><strong>Conditional (Ternary)</strong>: <code>condition ? expr1 : expr2</code></li>
+      </ul>
+
+      <pre><code class="language-c">/* Demonstrating different operators with clear comments */
+#include &lt;stdio.h&gt;
+
+int main(void) {
+    int a = 10, b = 3;
+    int result;
+
+    /* Arithmetic operators */
+    result = a + b;   /* addition        → 13 */
+    result = a - b;   /* subtraction     → 7  */
+    result = a * b;   /* multiplication  → 30 */
+    result = a / b;   /* integer division→ 3  (fractional part discarded) */
+    result = a % b;   /* modulus         → 1  (remainder of 10/3) */
+
+    /* Increment / Decrement */
+    a++;              /* postfix: use current value, THEN increment a */
+    ++a;              /* prefix : increment a FIRST, then use new value */
+    b--;              /* postfix decrement */
+    --b;              /* prefix decrement */
+
+    /* Relational & Logical (often used inside if / while) */
+    if (a &gt; b &amp;&amp; a != 0) {          /* true only if BOTH conditions are true */
+        printf("a is positive and greater than b\n");
+    }
+
+    /* Ternary operator – compact if-else */
+    int max = (a &gt; b) ? a : b;      /* if a &gt; b then max = a else max = b */
+
+    /* Compound assignment */
+    a += 5;   /* same as: a = a + 5; */
+    b *= 2;   /* same as: b = b * 2; */
+
+    return 0;
+}</code></pre>
+
+      <h3>Operator Precedence (High → Low)</h3>
+      <div class="mermaid">
+flowchart TD
+    A["() [] . -&gt;"] --> B["++ -- (postfix)"]
+    B --> C["++ -- + - ! ~ (prefix / unary)"]
+    C --> D["* / %"]
+    D --> E["+ -"]
+    E --> F["&lt; &lt;= &gt; &gt;="]
+    F --> G["== !="]
+    G --> H["&amp;&amp;"]
+    H --> I["||"]
+    I --> J["?:"]
+    J --> K["= += -= ..."]
+    style A fill:#2b6cb0,color:#fff
+    style K fill:#c53030,color:#fff
+      </div>
+
+      <div class="note-box">
+        <strong>Tip:</strong> Always use parentheses to make the intended order of evaluation explicit and improve readability.
+        Example: <code>(a + b) * c</code> is clearer than relying on precedence.
+      </div>
+
+      <h3>Type Conversion</h3>
+      <ul>
+        <li><strong>Implicit (Automatic)</strong>: Smaller type is promoted to larger type in mixed expressions.</li>
+        <li><strong>Explicit (Casting)</strong>: You force a conversion using <code>(type)expression</code>.</li>
+      </ul>
+
+      <pre><code class="language-c">int x = 5, y = 2;
+float result;
+
+result = x / y;          /* Integer division → 2.0 (truncated) */
+result = (float)x / y;   /* Cast x to float first → 2.5 (correct) */
+
+/* Another example */
+double d = 3.7;
+int i = (int)d;          /* Explicit cast: fractional part is discarded → i becomes 3 */</code></pre>
+    </section>
+
+    <!-- Control Flow -->
+    <section id="control">
+      <h2>3. Conditional Statements, Branching &amp; Looping</h2>
+
+      <h3>Decision Making</h3>
+      <div class="mermaid">
+flowchart TD
+    Start([Start]) --> Cond{Condition?}
+    Cond -->|True| TruePath[Execute True Block]
+    Cond -->|False| FalsePath[Execute False / Else Block]
+    TruePath --> End([End])
+    FalsePath --> End
+    style Cond fill:#ed8936,color:#fff
+      </div>
+
+      <pre><code class="language-c">/* if – else if – else ladder */
+#include &lt;stdio.h&gt;
+
+int main(void) {
+    int marks;
+    printf("Enter marks (0-100): ");
+    scanf("%d", &amp;marks);   /* &amp;marks = address of variable marks */
+
+    if (marks &gt;= 90) {
+        printf("Grade: A+\n");
+    } else if (marks &gt;= 80) {
+        printf("Grade: A\n");
+    } else if (marks &gt;= 70) {
+        printf("Grade: B\n");
+    } else if (marks &gt;= 60) {
+        printf("Grade: C\n");
+    } else if (marks &gt;= 40) {
+        printf("Grade: D\n");
+    } else {
+        printf("Grade: F (Fail)\n");
+    }
+
+    return 0;
+}</code></pre>
+
+      <pre><code class="language-c">/* switch – useful when you have many discrete choices */
+#include &lt;stdio.h&gt;
+
+int main(void) {
+    int day;
+    printf("Enter day number (1-7): ");
+    scanf("%d", &amp;day);
+
+    switch (day) {
+        case 1:
+            printf("Monday\n");
+            break;          /* break is REQUIRED, otherwise fall-through occurs */
+        case 2:
+            printf("Tuesday\n");
+            break;
+        case 3:
+            printf("Wednesday\n");
+            break;
+        case 4:
+            printf("Thursday\n");
+            break;
+        case 5:
+            printf("Friday\n");
+            break;
+        case 6:
+            printf("Saturday\n");
+            break;
+        case 7:
+            printf("Sunday\n");
+            break;
+        default:            /* executed if none of the cases match */
+            printf("Invalid day number!\n");
+    }
+
+    return 0;
+}</code></pre>
+
+      <h3>Loops</h3>
+      <div class="mermaid">
+flowchart TD
+    A([Start]) --> B[Initialization]
+    B --> C{Condition?}
+    C -->|True| D[Body of Loop]
+    D --> E[Update]
+    E --> C
+    C -->|False| F([End])
+    style C fill:#ed8936,color:#fff
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Loop</th><th>When to Use</th><th>Syntax Sketch</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>for</code></td>
+            <td>Known number of iterations</td>
+            <td><code>for(init; cond; update)</code></td>
+          </tr>
+          <tr>
+            <td><code>while</code></td>
+            <td>Condition checked before body</td>
+            <td><code>while(cond) { ... }</code></td>
+          </tr>
+          <tr>
+            <td><code>do-while</code></td>
+            <td>Body executes at least once</td>
+            <td><code>do { ... } while(cond);</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <pre><code class="language-c">/* for loop – print numbers 1 to 5 */
+#include &lt;stdio.h&gt;
+
+int main(void) {
+    int i;
+
+    /* for (initialization; condition; update) */
+    for (i = 1; i &lt;= 5; i++) {
+        printf("%d ", i);   /* prints: 1 2 3 4 5 */
+    }
+    printf("\n");
+
+    return 0;
+}</code></pre>
+
+      <pre><code class="language-c">/* while loop – sum of digits of a number */
+#include &lt;stdio.h&gt;
+
+int main(void) {
+    int num, sum = 0, digit;
+
+    printf("Enter a positive integer: ");
+    scanf("%d", &amp;num);
+
+    while (num &gt; 0) {           /* continue as long as digits remain */
+        digit = num % 10;       /* extract last digit */
+        sum = sum + digit;      /* add it to sum */
+        num = num / 10;         /* remove the last digit */
+    }
+
+    printf("Sum of digits = %d\n", sum);
+    return 0;
+}</code></pre>
+
+      <pre><code class="language-c">/* do-while – menu that runs at least once */
+#include &lt;stdio.h&gt;
+
+int main(void) {
+    int choice;
+
+    do {
+        printf("\n--- Menu ---\n");
+        printf("1. Option A\n");
+        printf("2. Option B\n");
+        printf("3. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &amp;choice);
+
+        /* process choice here ... */
+
+    } while (choice != 3);   /* loop continues until user chooses 3 */
+
+    printf("Goodbye!\n");
+    return 0;
+}</code></pre>
+    </section>
+
+    <!-- Arrays -->
+    <section id="arrays">
+      <h2>4. Arrays</h2>
+      <p>An array is a collection of elements of the <strong>same data type</strong> stored in contiguous memory locations. Indexing starts from <strong>0</strong>.</p>
+
+      <pre><code class="language-c">/* 1-D array example – storing and processing marks */
+#include &lt;stdio.h&gt;
+
+int main(void) {
+    /* Declaration + initialization */
+    int marks[5] = {85, 90, 78, 92, 88};  /* size 5, indices 0 to 4 */
+    int i;
+    int sum = 0;
+    float average;
+
+    /* Access and print each element */
+    printf("Marks: ");
+    for (i = 0; i &lt; 5; i++) {
+        printf("%d ", marks[i]);   /* marks[0], marks[1], ... */
+        sum += marks[i];           /* accumulate sum */
+    }
+    printf("\n");
+
+    average = (float)sum / 5;      /* cast to float for accurate division */
+    printf("Average = %.2f\n", average);
+
+    return 0;
+}</code></pre>
+
+      <div class="mermaid">
+flowchart LR
+    subgraph Array["marks[5]"]
+        A0["[0]=85"] --- A1["[1]=90"] --- A2["[2]=78"] --- A3["[3]=92"] --- A4["[4]=88"]
+    end
+    style A0 fill:#bee3f8
+    style A1 fill:#bee3f8
+    style A2 fill:#bee3f8
+    style A3 fill:#bee3f8
+    style A4 fill:#bee3f8
+      </div>
+
+      <pre><code class="language-c">/* 2-D array (matrix) example */
+#include &lt;stdio.h&gt;
+
+int main(void) {
+    /* 3 rows × 3 columns matrix */
+    int matrix[3][3] = {
+        {1, 2, 3},   /* row 0 */
+        {4, 5, 6},   /* row 1 */
+        {7, 8, 9}    /* row 2 */
+    };
+    int i, j;
+
+    printf("Matrix:\n");
+    for (i = 0; i &lt; 3; i++) {          /* outer loop = rows */
+        for (j = 0; j &lt; 3; j++) {      /* inner loop = columns */
+            printf("%d ", matrix[i][j]);
+        }
+        printf("\n");                  /* new line after each row */
+    }
+
+    return 0;
+}</code></pre>
+
+      <div class="tip-box">
+        <strong>Important:</strong>
+        <ul>
+          <li>Array name represents the <em>base address</em> (address of the first element).</li>
+          <li>Accessing an index outside 0 … size−1 causes <em>undefined behaviour</em>.</li>
+          <li>When you pass an array to a function, only the address is passed (call by reference).</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Functions -->
+    <section id="functions">
+      <h2>5. Functions &amp; Recursion</h2>
+      <p>Functions enable modular programming and hierarchical decomposition. They improve readability and reusability.</p>
+
+      <pre><code class="language-c">/*
+ * Function demonstration:
+ * - Function prototype (declaration)
+ * - Function definition
+ * - Function call
+ * - Return value
+ */
+#include &lt;stdio.h&gt;
+
+/* Function prototype – tells the compiler about the function before it is used */
+int add(int a, int b);          /* takes two ints, returns an int */
+void printMessage(void);        /* takes nothing, returns nothing */
+
+int main(void) {
+    int x = 5, y = 7;
+    int sum;
+
+    printMessage();             /* call a void function */
+
+    sum = add(x, y);            /* call add() and store the returned value */
+    printf("Sum of %d and %d is %d\n", x, y, sum);
+
+    return 0;
+}
+
+/* Function definition of add */
+int add(int a, int b) {
+    /* a and b are local copies of the arguments (call by value) */
+    return a + b;               /* return the result to the caller */
+}
+
+/* Function definition of printMessage */
+void printMessage(void) {
+    printf("Welcome to functions in C!\n");
+    /* no return statement needed for void functions */
+}</code></pre>
+
+      <h3>Argument Passing</h3>
+      <ul>
+        <li><strong>Call by Value</strong>: A copy of the argument is passed. Changes inside the function do <em>not</em> affect the original variable.</li>
+        <li><strong>Call by Reference</strong> (using pointers): The address is passed; the function can modify the original variable.</li>
+      </ul>
+
+      <pre><code class="language-c">/* Call by value vs Call by reference (using pointers) */
+#include &lt;stdio.h&gt;
+
+void swapByValue(int a, int b) {
+    int temp = a;
+    a = b;
+    b = temp;
+    /* Only local copies are swapped – originals remain unchanged */
+}
+
+void swapByReference(int *a, int *b) {  /* *a means "value at address a" */
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+    /* Original variables are modified because we work with their addresses */
+}
+
+int main(void) {
+    int x = 10, y = 20;
+
+    printf("Before any swap: x = %d, y = %d\n", x, y);
+
+    swapByValue(x, y);
+    printf("After swapByValue: x = %d, y = %d  (unchanged)\n", x, y);
+
+    swapByReference(&amp;x, &amp;y);   /* pass addresses using &amp; operator */
+    printf("After swapByReference: x = %d, y = %d  (swapped!)\n", x, y);
+
+    return 0;
+}</code></pre>
+
+      <h3>Recursion</h3>
+      <p>A function that calls itself (directly or indirectly). It must have a <strong>base case</strong> that stops the recursion.</p>
+
+      <div class="mermaid">
+flowchart TD
+    A[factorial n] --> B{n == 0 or 1?}
+    B -->|Yes| C[return 1]
+    B -->|No| D["return n * factorial(n-1)"]
+    D --> A
+    style B fill:#ed8936,color:#fff
+    style C fill:#38a169,color:#fff
+      </div>
+
+      <pre><code class="language-c">/* Factorial using recursion */
+#include &lt;stdio.h&gt;
+
+long factorial(int n) {
+    /* Base case – stops the recursion */
+    if (n &lt;= 1) {
+        return 1;
+    }
+    /* Recursive case – function calls itself with a smaller argument */
+    return n * factorial(n - 1);
+}
+
+int main(void) {
+    int num = 5;
+    printf("Factorial of %d = %ld\n", num, factorial(num));
+    /* Calculation: 5 * 4 * 3 * 2 * 1 = 120 */
+    return 0;
+}</code></pre>
+    </section>
+
+    <!-- Strings -->
+    <section id="strings">
+      <h2>6. String Handling</h2>
+      <p>In C, a string is a <strong>null-terminated</strong> (<code>\0</code>) character array. The null character marks the end of the string.</p>
+
+      <pre><code class="language-c">/* Common string operations */
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;   /* required for strlen, strcpy, strcat, strcmp, etc. */
+
+int main(void) {
+    char name[50] = "Alice";     /* automatically adds '\0' at the end */
+    char city[30];
+    char full[80];
+
+    /* Copy a string */
+    strcpy(city, "Mumbai");      /* city now contains "Mumbai\0" */
+
+    /* Concatenate (join) two strings */
+    strcpy(full, name);          /* full = "Alice" */
+    strcat(full, " from ");      /* full = "Alice from " */
+    strcat(full, city);          /* full = "Alice from Mumbai" */
+
+    /* Length (does NOT count the '\0') */
+    printf("Length of name = %zu\n", strlen(name));  /* 5 */
+
+    /* Compare two strings (returns 0 if equal) */
+    if (strcmp(name, "Alice") == 0) {
+        printf("Names match!\n");
+    }
+
+    printf("Full string: %s\n", full);
+    return 0;
+}</code></pre>
+
+      <h4>Common Library Functions (<code>string.h</code>)</h4>
+      <ul>
+        <li><code>strlen(s)</code> – returns length of string <code>s</code></li>
+        <li><code>strcpy(dest, src)</code> – copies <code>src</code> into <code>dest</code></li>
+        <li><code>strcat(dest, src)</code> – appends <code>src</code> to the end of <code>dest</code></li>
+        <li><code>strcmp(s1, s2)</code> – compares <code>s1</code> and <code>s2</code> (0 = equal)</li>
+        <li><code>strchr(s, ch)</code> – finds first occurrence of character <code>ch</code></li>
+        <li><code>strstr(s, sub)</code> – finds first occurrence of substring <code>sub</code></li>
+      </ul>
+
+      <div class="warning-box">
+        <strong>Caution:</strong> Always ensure the destination array is large enough.
+        Buffer overflow is a common source of bugs and security issues.
+      </div>
+    </section>
+
+    <!-- Structures & Unions -->
+    <section id="structures">
+      <h2>7. Structures, Unions &amp; Enumerated Types</h2>
+
+      <h3>Structure</h3>
+      <p>A user-defined type that groups variables of <em>different</em> types under one name.</p>
+      <pre><code class="language-c">/* Defining and using a structure */
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+/* Define a new data type called "struct Student" */
+struct Student {
+    int roll;           /* member 1 */
+    char name[50];      /* member 2 */
+    float marks;        /* member 3 */
+};
+
+int main(void) {
+    /* Declare a variable of type struct Student */
+    struct Student s1;
+
+    /* Assign values to members using the dot operator */
+    s1.roll = 101;
+    strcpy(s1.name, "Riya Sharma");
+    s1.marks = 92.5f;
+
+    /* Access and print members */
+    printf("Roll  : %d\n", s1.roll);
+    printf("Name  : %s\n", s1.name);
+    printf("Marks : %.1f\n", s1.marks);
+
+    /* Initialization at declaration time */
+    struct Student s2 = {102, "Amit Patel", 88.0f};
+
+    return 0;
+}</code></pre>
+
+      <h3>Array of Structures &amp; Nested Structures</h3>
+      <pre><code class="language-c">/* Array of structures + structure inside structure */
+#include &lt;stdio.h&gt;
+
+struct Date {
+    int day;
+    int month;
+    int year;
+};
+
+struct Employee {
+    int id;
+    char name[40];
+    struct Date joining;   /* nested structure */
+};
+
+int main(void) {
+    /* Array of 3 employees */
+    struct Employee staff[3] = {
+        {1001, "Neha",  {15, 6, 2022}},
+        {1002, "Raj",   {1, 1, 2023}},
+        {1003, "Sara",  {20, 3, 2021}}
+    };
+
+    int i;
+    for (i = 0; i &lt; 3; i++) {
+        printf("%s joined on %02d-%02d-%d\n",
+               staff[i].name,
+               staff[i].joining.day,
+               staff[i].joining.month,
+               staff[i].joining.year);
+    }
+
+    return 0;
+}</code></pre>
+
+      <h3>Union</h3>
+      <p>Similar syntax to a structure, but all members share the <strong>same memory location</strong>. Only one member is valid at a time. Useful for saving memory.</p>
+
+      <pre><code class="language-c">/* Union example – only one member is active at a time */
+#include &lt;stdio.h&gt;
+
+union Data {
+    int i;
+    float f;
+    char str[20];
+};
+
+int main(void) {
+    union Data d;
+
+    d.i = 42;
+    printf("d.i = %d\n", d.i);     /* valid */
+
+    d.f = 3.14f;                   /* overwrites the previous value */
+    printf("d.f = %.2f\n", d.f);   /* valid now */
+    /* d.i is no longer reliable */
+
+    return 0;
+}</code></pre>
+
+      <h3>Enumerated Data Type</h3>
+      <pre><code class="language-c">/* enum – gives meaningful names to integer constants */
+#include &lt;stdio.h&gt;
+
+enum Weekday { MON, TUE, WED, THU, FRI, SAT, SUN };
+/* By default: MON=0, TUE=1, WED=2, ... SUN=6 */
+
+int main(void) {
+    enum Weekday today = WED;
+
+    if (today == WED) {
+        printf("It is Wednesday!\n");
+    }
+
+    /* You can also assign explicit values */
+    enum Status { FAIL = 0, PASS = 1, DISTINCTION = 2 };
+
+    return 0;
+}</code></pre>
+    </section>
+
+    <!-- File Handling -->
+    <section id="files">
+      <h2>8. File Handling <span class="badge hours">5 Hours</span></h2>
+      <p>Files allow permanent storage of data beyond the lifetime of a program.</p>
+
+      <div class="mermaid">
+flowchart LR
+    A[Open File<br>fopen] --> B{Success?}
+    B -->|Yes| C[Read / Write<br>fscanf / fprintf<br>fgetc / fputc ...]
+    C --> D[Close File<br>fclose]
+    B -->|No| E[Error Handling]
+    style A fill:#2b6cb0,color:#fff
+    style D fill:#38a169,color:#fff
+      </div>
+
+      <pre><code class="language-c">/* Basic file writing and reading */
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;   /* for exit() */
+
+int main(void) {
+    FILE *fp;         /* FILE is a special type defined in stdio.h */
+    int num;
+
+    /* ---------- Writing to a file ---------- */
+    fp = fopen("data.txt", "w");   /* "w" = write mode (creates/overwrites) */
+    if (fp == NULL) {              /* Always check if fopen succeeded */
+        printf("Error: Cannot open file for writing\n");
+        exit(1);                   /* terminate program with error code */
+    }
+
+    fprintf(fp, "Hello File Handling!\n");
+    fprintf(fp, "Number: %d\n", 42);
+    fclose(fp);                    /* Always close the file when done */
+    printf("Data written successfully.\n");
+
+    /* ---------- Reading from a file ---------- */
+    fp = fopen("data.txt", "r");   /* "r" = read mode */
+    if (fp == NULL) {
+        printf("Error: Cannot open file for reading\n");
+        exit(1);
+    }
+
+    char line[100];
+    while (fgets(line, sizeof(line), fp) != NULL) {  /* read line by line */
+        printf("Read: %s", line);
+    }
+    fclose(fp);
+
+    return 0;
+}</code></pre>
+
+      <h4>Common File Modes</h4>
+      <ul>
+        <li><code>"r"</code> – open for reading (file must exist)</li>
+        <li><code>"w"</code> – open for writing (creates new / truncates existing)</li>
+        <li><code>"a"</code> – open for appending (writes at the end)</li>
+        <li><code>"r+"</code>, <code>"w+"</code>, <code>"a+"</code> – update modes (read + write)</li>
+      </ul>
+
+      <div class="note-box">
+        <strong>Remember:</strong> Always check the return value of <code>fopen()</code>. Always call <code>fclose()</code> when you finish with a file.
+      </div>
+    </section>
+
+    <!-- Practicals -->
+    <section id="practicals">
+      <h2>C Language Practical <span class="badge hours">30 Hours</span></h2>
+      <p>Credit: 01 &nbsp;|&nbsp; List of suggested programs:</p>
+
+      <ol class="practical-list">
+        <li>WAP to print the sum and product of digits of an integer.</li>
+        <li>WAP to reverse a number.</li>
+        <li>WAP to compute the sum of the first n terms of the series <code>S = 1 + 1/2 + 1/3 + 1/4 + …</code></li>
+        <li>WAP to compute the sum of the first n terms of the series <code>S = 1 − 2 + 3 − 4 + 5 …</code></li>
+        <li>Write a function that checks whether a given string is a Palindrome. Use it to test user input.</li>
+        <li>Write a function to check whether a number is prime. Generate all primes less than 100.</li>
+        <li>WAP to compute the factors of a given number.</li>
+        <li>Write a macro that swaps two numbers. WAP to use it.</li>
+        <li>WAP to print a triangle of stars (number of lines from user):
+          <pre style="margin-top:0.5rem; background:#282c34; color:#abb2bf; padding:0.8rem; border-radius:6px;"><code>*
+***
+*****
+*******</code></pre>
+        </li>
+        <li>Menu-driven program on an array: print even/odd elements, sum &amp; average, max &amp; min, remove duplicates, reverse, re-enter array, quit.</li>
+        <li>Print a table of occurrences of each alphabet in text given as command-line arguments.</li>
+        <li>Swap two numbers using pointers.</li>
+        <li>Function that receives addresses of two variables and alters their contents.</li>
+        <li>Take radius, pass to a function that computes area &amp; circumference; display results from <code>main()</code>.</li>
+        <li>Menu-driven string operations: show addresses of characters, concatenate (with &amp; without <code>strcat</code>), compare, length (using pointers), case conversion, count vowels, reverse.</li>
+        <li>Merge two ordered integer arrays into a single ordered array.</li>
+        <li>Display Fibonacci series (i) using recursion (ii) using iteration.</li>
+        <li>Calculate Factorial (i) recursion (ii) iteration.</li>
+        <li>Calculate GCD of two numbers (i) with recursion (ii) without recursion.</li>
+        <li>Create Matrix class using templates (or 2-D arrays). Menu-driven: Sum, Difference, Product, Transpose.</li>
+        <li>Menu-driven program using user-defined functions to find area of rectangle, square, circle and triangle.</li>
+        <li>Display the first n terms of Fibonacci series.</li>
+        <li>Find factorial of a given number.</li>
+        <li>Sum of the series for n terms: <code>1 − 2/2! + 3/3! − … ± n/n!</code></li>
+        <li>Calculate the sum and product of two compatible matrices.</li>
+      </ol>
+
+      <div class="warning-box">
+        <strong>Practice Tip:</strong> Implement each program, test with multiple inputs (including edge cases such as 0, negative numbers, empty strings), and understand the underlying algorithm before coding.
+      </div>
+    </section>
+
+    <!-- Charts -->
+    <section id="charts">
+      <h2>Course Hours Distribution</h2>
+      <p>Visual breakdown of the 45-hour theory component:</p>
+      <div class="chart-container">
+        <canvas id="hoursChart"></canvas>
+      </div>
+
+      <h3 style="margin-top:2rem;">Topic Coverage Weight</h3>
+      <div class="chart-container">
+        <canvas id="topicsChart"></canvas>
+      </div>
+    </section>
+
+    <!-- Quick Reference -->
+    <section id="quickref">
+      <h2>Quick Reference – Common Patterns</h2>
+
+      <h3>Reading input &amp; printing</h3>
+      <pre><code class="language-c">int n;
+float f;
+char str[50];
+
+scanf("%d", &amp;n);          /* read integer – note the &amp; */
+scanf("%f", &amp;f);          /* read float */
+scanf("%s", str);         /* read string (no spaces) – no &amp; needed for arrays */
+fgets(str, 50, stdin);    /* safer way to read a whole line (including spaces) */
+
+printf("Integer: %d\n", n);
+printf("Float  : %.2f\n", f);
+printf("String : %s\n", str);</code></pre>
+
+      <h3>Looping over an array</h3>
+      <pre><code class="language-c">int arr[5] = {10, 20, 30, 40, 50};
+int i;
+
+for (i = 0; i &lt; 5; i++) {
+    printf("arr[%d] = %d\n", i, arr[i]);
+}</code></pre>
+
+      <h3>Simple function with return value</h3>
+      <pre><code class="language-c">/* Returns the larger of two integers */
+int max(int a, int b) {
+    return (a &gt; b) ? a : b;   /* ternary operator used for brevity */
+}
+
+/* Usage */
+int bigger = max(15, 27);     /* bigger becomes 27 */</code></pre>
+
+      <h3>Checking a prime number (useful for practicals)</h3>
+      <pre><code class="language-c">int isPrime(int n) {
+    int i;
+    if (n &lt;= 1) return 0;          /* 0 and 1 are not prime */
+    if (n &lt;= 3) return 1;          /* 2 and 3 are prime */
+
+    /* Check divisibility from 2 up to sqrt(n) */
+    for (i = 2; i * i &lt;= n; i++) {
+        if (n % i == 0)
+            return 0;              /* divisible → not prime */
+    }
+    return 1;                      /* no divisors found → prime */
+}</code></pre>
+    </section>
+  </main>
+
+  <footer>
+    COMP 4021 – Programming in C &nbsp;|&nbsp; Minor Course Notes &nbsp;|&nbsp; Generated for educational purposes
+  </footer>
+
+  <script>
+    // Initialize Mermaid
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      securityLevel: 'loose',
+      flowchart: { curve: 'basis', htmlLabels: true }
+    });
+
+    // Initialize Highlight.js for all code blocks
+    if (typeof hljs !== 'undefined') {
+      hljs.highlightAll();
+    } else {
+      console.warn('Highlight.js failed to load – syntax highlighting disabled');
+    }
+
+    // Hours doughnut chart
+    const ctx1 = document.getElementById('hoursChart').getContext('2d');
+    new Chart(ctx1, {
+      type: 'doughnut',
+      data: {
+        labels: [
+          'Intro + Operators + I/O (15h)',
+          'Control Flow + Arrays (15h)',
+          'Functions + Strings + Structures (10h)',
+          'File Handling (5h)'
+        ],
+        datasets: [{
+          data: [15, 15, 10, 5],
+          backgroundColor: [
+            '#2b6cb0',
+            '#38a169',
+            '#d69e2e',
+            '#c53030'
+          ],
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 16, font: { size: 13 } } },
+          title: { display: true, text: 'Theory Hours (45 Hrs)', font: { size: 16 } }
+        }
+      }
+    });
+
+    // Topics bar chart
+    const ctx2 = document.getElementById('topicsChart').getContext('2d');
+    new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: ['Basics & Operators', 'Control & Arrays', 'Functions & Data Structures', 'Files'],
+        datasets: [{
+          label: 'Hours',
+          data: [15, 15, 10, 5],
+          backgroundColor: ['#2b6cb0', '#38a169', '#d69e2e', '#c53030'],
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Hours' }, ticks: { stepSize: 5 } }
+        },
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: 'Syllabus Topic Hours', font: { size: 16 } }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
