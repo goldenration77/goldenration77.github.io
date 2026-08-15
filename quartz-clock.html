@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mechanical Analog Clock — Three.js</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a0c; }
+  canvas { display: block; }
+  #info {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #c8b89a;
+    font: 13px/1.4 "Segoe UI", system-ui, sans-serif;
+    text-align: center;
+    opacity: 0.8;
+    pointer-events: none;
+    letter-spacing: 0.04em;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  }
+  #info kbd {
+    background: #1e1c18;
+    border: 1px solid #3a342c;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+  #sound-hint {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #e8d5a8;
+    font: 14px/1.4 "Segoe UI", system-ui, sans-serif;
+    background: rgba(20,18,14,0.85);
+    border: 1px solid #4a3f2e;
+    border-radius: 8px;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: opacity 0.4s, transform 0.3s;
+    z-index: 10;
+  }
+  #sound-hint:hover { background: rgba(40,34,24,0.95); }
+  #sound-hint.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(-12px); }
+</style>
+</head>
+<body>
+<div id="sound-hint">Click anywhere to enable mechanical tick sounds</div>
+<div id="info">
+  Mechanical lever escapement · discrete second ticks with overshoot<br>
+  Drag to orbit · scroll to zoom · <kbd>R</kbd> reset · <kbd>M</kbd> mute/unmute
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ─── Scene / Camera / Renderer ───────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a0c);
+scene.fog = new THREE.FogExp2(0x0a0a0c, 0.012);
+
+const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 200);
+camera.position.set(0, 4.5, 22);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 12;
+controls.maxDistance = 40;
+controls.target.set(0, 0, 0);
+controls.maxPolarAngle = Math.PI * 0.85;
+
+// ─── Lighting ────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xfff5e6, 0.35));
+
+const key = new THREE.DirectionalLight(0xfff0d8, 1.4);
+key.position.set(8, 14, 10);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.near = 1;
+key.shadow.camera.far = 50;
+key.shadow.camera.left = key.shadow.camera.bottom = -18;
+key.shadow.camera.right = key.shadow.camera.top = 18;
+key.shadow.bias = -0.0003;
+scene.add(key);
+
+scene.add(new THREE.DirectionalLight(0xa8c4e8, 0.35).translateX(-10).translateY(6).translateZ(-8));
+
+const rim = new THREE.PointLight(0xffc978, 0.55, 40);
+rim.position.set(0, -2, 12);
+scene.add(rim);
+
+const floorLight = new THREE.PointLight(0x3a2a18, 0.4, 30);
+floorLight.position.set(0, -6, 0);
+scene.add(floorLight);
+
+// ─── Materials ───────────────────────────────────────────────────────────────
+const brass = new THREE.MeshStandardMaterial({ color: 0xb8975a, metalness: 0.85, roughness: 0.28 });
+const darkBrass = new THREE.MeshStandardMaterial({ color: 0x6b5328, metalness: 0.9, roughness: 0.35 });
+const steel = new THREE.MeshStandardMaterial({ color: 0x9aa3ad, metalness: 0.95, roughness: 0.22 });
+const polishedSteel = new THREE.MeshStandardMaterial({ color: 0xc8d0d8, metalness: 1.0, roughness: 0.12 });
+const enamel = new THREE.MeshStandardMaterial({ color: 0xf4efe6, metalness: 0.05, roughness: 0.55 });
+const blackEnamel = new THREE.MeshStandardMaterial({ color: 0x1a1814, metalness: 0.15, roughness: 0.4 });
+const redHand = new THREE.MeshStandardMaterial({ color: 0xb83020, metalness: 0.4, roughness: 0.35 });
+const wood = new THREE.MeshStandardMaterial({ color: 0x3d2b1a, metalness: 0.05, roughness: 0.75 });
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envScene = new THREE.Scene();
+envScene.add(new THREE.AmbientLight(0xffffff, 0.6));
+const envLight = new THREE.DirectionalLight(0xffe8c8, 1.2);
+envLight.position.set(5, 10, 7);
+envScene.add(envLight);
+const envMap = pmrem.fromScene(envScene, 0.04).texture;
+scene.environment = envMap;
+[brass, darkBrass, steel, polishedSteel].forEach(m => { m.envMap = envMap; });
+
+// ─── Gear factory ────────────────────────────────────────────────────────────
+function createGear(teeth, radius, thickness, hubRadius, material, toothDepth = 0.35) {
+  const shape = new THREE.Shape();
+  const outerR = radius;
+  const innerR = radius - toothDepth;
+  const step = (Math.PI * 2) / teeth;
+
+  for (let i = 0; i < teeth; i++) {
+    const a0 = i * step;
+    const a1 = a0 + step * 0.28;
+    const a2 = a0 + step * 0.5;
+    const a3 = a0 + step * 0.72;
+    const a4 = a0 + step;
+    if (i === 0) shape.moveTo(Math.cos(a0) * outerR, Math.sin(a0) * outerR);
+    else shape.lineTo(Math.cos(a0) * outerR, Math.sin(a0) * outerR);
+    shape.lineTo(Math.cos(a1) * outerR, Math.sin(a1) * outerR);
+    shape.lineTo(Math.cos(a2) * innerR, Math.sin(a2) * innerR);
+    shape.lineTo(Math.cos(a3) * outerR, Math.sin(a3) * outerR);
+    shape.lineTo(Math.cos(a4) * outerR, Math.sin(a4) * outerR);
+  }
+  shape.closePath();
+
+  const hole = new THREE.Path();
+  hole.absarc(0, 0, hubRadius, 0, Math.PI * 2, true);
+  shape.holes.push(hole);
+
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth: thickness,
+    bevelEnabled: true,
+    bevelThickness: 0.06,
+    bevelSize: 0.05,
+    bevelSegments: 2
+  });
+  geo.center();
+  geo.rotateX(-Math.PI / 2);
+
+  const mesh = new THREE.Mesh(geo, material);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.userData.teeth = teeth;
+  mesh.userData.radius = radius;
+  return mesh;
+}
+
+function createSpokeWheel(radius, thickness, spokes, material, rimWidth = 0.25) {
+  const group = new THREE.Group();
+  const rimGeo = new THREE.TorusGeometry(radius - rimWidth / 2, rimWidth / 2, 10, 48);
+  const rim = new THREE.Mesh(rimGeo, material);
+  rim.rotation.x = Math.PI / 2;
+  rim.castShadow = true;
+  group.add(rim);
+
+  const hub = new THREE.Mesh(
+    new THREE.CylinderGeometry(radius * 0.18, radius * 0.18, thickness * 1.4, 20),
+    material
+  );
+  hub.castShadow = true;
+  group.add(hub);
+
+  for (let i = 0; i < spokes; i++) {
+    const angle = (i / spokes) * Math.PI * 2;
+    const spoke = new THREE.Mesh(
+      new THREE.BoxGeometry(radius * 0.9, thickness * 0.7, 0.12),
+      material
+    );
+    spoke.position.x = Math.cos(angle) * radius * 0.45;
+    spoke.position.z = Math.sin(angle) * radius * 0.45;
+    spoke.rotation.y = -angle;
+    spoke.castShadow = true;
+    group.add(spoke);
+  }
+  return group;
+}
+
+// ─── Clock body ──────────────────────────────────────────────────────────────
+const clockGroup = new THREE.Group();
+scene.add(clockGroup);
+
+const bezel = new THREE.Mesh(new THREE.TorusGeometry(7.4, 0.55, 16, 64), brass);
+bezel.rotation.x = Math.PI / 2;
+bezel.castShadow = true;
+bezel.receiveShadow = true;
+clockGroup.add(bezel);
+
+const ring2 = new THREE.Mesh(new THREE.TorusGeometry(6.95, 0.18, 12, 64), darkBrass);
+ring2.rotation.x = Math.PI / 2;
+ring2.position.y = 0.15;
+clockGroup.add(ring2);
+
+const dial = new THREE.Mesh(new THREE.CylinderGeometry(6.7, 6.7, 0.22, 64), enamel);
+dial.receiveShadow = true;
+clockGroup.add(dial);
+
+const chapter = new THREE.Mesh(
+  new THREE.CylinderGeometry(6.15, 6.15, 0.08, 64),
+  new THREE.MeshStandardMaterial({ color: 0xece6d8, metalness: 0.08, roughness: 0.5 })
+);
+chapter.position.y = 0.14;
+clockGroup.add(chapter);
+
+const backPlate = new THREE.Mesh(new THREE.CylinderGeometry(7.2, 7.2, 0.35, 48), darkBrass);
+backPlate.position.y = -0.4;
+backPlate.castShadow = true;
+clockGroup.add(backPlate);
+
+const caseSide = new THREE.Mesh(
+  new THREE.CylinderGeometry(7.35, 7.35, 1.1, 64, 1, true),
+  brass
+);
+caseSide.position.y = -0.15;
+caseSide.castShadow = true;
+clockGroup.add(caseSide);
+
+// ─── Markers & numerals ──────────────────────────────────────────────────────
+const markersGroup = new THREE.Group();
+clockGroup.add(markersGroup);
+
+for (let i = 0; i < 12; i++) {
+  const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+  const marker = new THREE.Mesh(
+    new THREE.BoxGeometry(0.18, 0.12, i % 3 === 0 ? 0.85 : 0.55),
+    blackEnamel
+  );
+  const r = 5.55;
+  marker.position.set(Math.cos(angle) * r, 0.22, Math.sin(angle) * r);
+  marker.rotation.y = -angle + Math.PI / 2;
+  marker.castShadow = true;
+  markersGroup.add(marker);
+}
+
+for (let i = 0; i < 60; i++) {
+  if (i % 5 === 0) continue;
+  const angle = (i / 60) * Math.PI * 2 - Math.PI / 2;
+  const tick = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.28), blackEnamel);
+  const r = 5.7;
+  tick.position.set(Math.cos(angle) * r, 0.2, Math.sin(angle) * r);
+  tick.rotation.y = -angle + Math.PI / 2;
+  markersGroup.add(tick);
+}
+
+function makeNumeralTexture(text) {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 128, 128);
+  ctx.fillStyle = '#1a1814';
+  ctx.font = 'bold 72px "Times New Roman", serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 64, 68);
+  const tex = new THREE.CanvasTexture(c);
+  tex.anisotropy = 8;
+  return tex;
+}
+
+const numeralPositions = [
+  { n: '12', a: -Math.PI / 2 },
+  { n: '1',  a: -Math.PI / 2 + Math.PI / 6 },
+  { n: '2',  a: -Math.PI / 2 + Math.PI / 3 },
+  { n: '3',  a: 0 },
+  { n: '4',  a: Math.PI / 6 },
+  { n: '5',  a: Math.PI / 3 },
+  { n: '6',  a: Math.PI / 2 },
+  { n: '7',  a: Math.PI / 2 + Math.PI / 6 },
+  { n: '8',  a: Math.PI / 2 + Math.PI / 3 },
+  { n: '9',  a: Math.PI },
+  { n: '10', a: Math.PI + Math.PI / 6 },
+  { n: '11', a: Math.PI + Math.PI / 3 }
+];
+
+numeralPositions.forEach(({ n, a }) => {
+  const mat = new THREE.MeshBasicMaterial({
+    map: makeNumeralTexture(n),
+    transparent: true,
+    depthWrite: false
+  });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 1.15), mat);
+  const r = 4.55;
+  plane.position.set(Math.cos(a) * r, 0.28, Math.sin(a) * r);
+  plane.rotation.set(-Math.PI / 2, 0, -a - Math.PI / 2);
+  markersGroup.add(plane);
+});
+
+// ─── Hands ───────────────────────────────────────────────────────────────────
+const handsGroup = new THREE.Group();
+clockGroup.add(handsGroup);
+
+const pivot = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.55, 16), polishedSteel);
+pivot.position.y = 0.35;
+pivot.castShadow = true;
+handsGroup.add(pivot);
+
+const hourHand = new THREE.Group();
+{
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.08, 3.2), blackEnamel);
+  blade.position.z = -1.35; blade.castShadow = true; hourHand.add(blade);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.55, 4), blackEnamel);
+  tip.rotation.x = Math.PI / 2; tip.position.z = -3.05; hourHand.add(tip);
+  const cw = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.1, 0.9), blackEnamel);
+  cw.position.z = 0.55; hourHand.add(cw);
+}
+hourHand.position.y = 0.42;
+handsGroup.add(hourHand);
+
+const minuteHand = new THREE.Group();
+{
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.07, 4.6), blackEnamel);
+  blade.position.z = -2.0; blade.castShadow = true; minuteHand.add(blade);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.45, 4), blackEnamel);
+  tip.rotation.x = Math.PI / 2; tip.position.z = -4.4; minuteHand.add(tip);
+  const cw = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.08, 0.7), blackEnamel);
+  cw.position.z = 0.5; minuteHand.add(cw);
+}
+minuteHand.position.y = 0.50;
+handsGroup.add(minuteHand);
+
+const secondHand = new THREE.Group();
+{
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 5.2), redHand);
+  blade.position.z = -2.1; blade.castShadow = true; secondHand.add(blade);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), redHand);
+  tip.position.z = -4.75; secondHand.add(tip);
+  const cw = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.06, 16), redHand);
+  cw.rotation.x = Math.PI / 2; cw.position.z = 0.85; secondHand.add(cw);
+}
+secondHand.position.y = 0.58;
+handsGroup.add(secondHand);
+
+// ─── Mechanical movement (enhanced gear train) ───────────────────────────────
+const movement = new THREE.Group();
+movement.position.set(0, -0.9, 0);
+clockGroup.add(movement);
+
+const mainPlate = new THREE.Mesh(new THREE.CylinderGeometry(5.8, 5.8, 0.15, 48), darkBrass);
+mainPlate.position.y = -0.1;
+mainPlate.castShadow = true;
+movement.add(mainPlate);
+
+// Gear train with realistic tooth counts & mesh relationships
+// Escape wheel (30) → driven by pallet, advances 1 tooth/sec
+const escapeWheel = createGear(30, 1.55, 0.16, 0.22, steel, 0.26);
+escapeWheel.position.set(1.85, 0.18, 1.35);
+movement.add(escapeWheel);
+
+// Fourth wheel (meshes with escape) — higher tooth count, slower
+const fourthWheel = createGear(42, 2.05, 0.18, 0.28, brass, 0.30);
+fourthWheel.position.set(-0.55, 0.14, 2.15);
+movement.add(fourthWheel);
+
+// Third wheel
+const thirdWheel = createGear(48, 2.55, 0.20, 0.32, darkBrass, 0.34);
+thirdWheel.position.set(-2.35, 0.12, 0.35);
+movement.add(thirdWheel);
+
+// Center / great wheel (drives minute hand conceptually)
+const centerWheel = createGear(60, 2.95, 0.22, 0.38, brass, 0.36);
+centerWheel.position.set(0.45, 0.10, -1.95);
+movement.add(centerWheel);
+
+// Extra intermediate gear for richer visual motion
+const intermediate = createGear(36, 1.75, 0.15, 0.24, steel, 0.28);
+intermediate.position.set(2.5, 0.16, -0.4);
+movement.add(intermediate);
+
+// Balance wheel (oscillator)
+const balance = createSpokeWheel(1.35, 0.12, 8, polishedSteel, 0.2);
+balance.position.set(2.45, 0.38, -1.55);
+movement.add(balance);
+
+const balanceStaff = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.08, 0.08, 0.7, 12),
+  polishedSteel
+);
+balanceStaff.position.copy(balance.position);
+balanceStaff.position.y += 0.1;
+movement.add(balanceStaff);
+
+// Escape lever / pallet (moves slightly with each tick)
+const pallet = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.11, 0.32), steel);
+pallet.position.set(1.85, 0.38, 0.25);
+pallet.rotation.y = 0.35;
+movement.add(pallet);
+
+// Small pillars
+for (let i = 0; i < 4; i++) {
+  const a = (i / 4) * Math.PI * 2 + 0.4;
+  const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 1.0, 10), brass);
+  pillar.position.set(Math.cos(a) * 4.6, -0.35, Math.sin(a) * 4.6);
+  pillar.castShadow = true;
+  movement.add(pillar);
+}
+
+// ─── Pedestal ────────────────────────────────────────────────────────────────
+const base = new THREE.Group();
+scene.add(base);
+
+const baseTop = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.6, 0.5, 32), wood);
+baseTop.position.y = -6.4;
+baseTop.castShadow = true;
+baseTop.receiveShadow = true;
+base.add(baseTop);
+
+const baseMid = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.8, 1.8, 24), wood);
+baseMid.position.y = -7.5;
+baseMid.castShadow = true;
+base.add(baseMid);
+
+const baseFoot = new THREE.Mesh(new THREE.CylinderGeometry(4.0, 4.2, 0.4, 32), wood);
+baseFoot.position.y = -8.5;
+baseFoot.receiveShadow = true;
+base.add(baseFoot);
+
+for (let i = 0; i < 3; i++) {
+  const a = (i / 3) * Math.PI * 2;
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, 5.2, 12), brass);
+  col.position.set(Math.cos(a) * 2.2, -3.5, Math.sin(a) * 2.2);
+  col.castShadow = true;
+  base.add(col);
+}
+
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(28, 64),
+  new THREE.MeshStandardMaterial({ color: 0x121014, metalness: 0.1, roughness: 0.9 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -8.75;
+floor.receiveShadow = true;
+scene.add(floor);
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  WEB AUDIO — mechanical tick / tock synthesis (no external files)
+// ═══════════════════════════════════════════════════════════════════════════════
+let audioCtx = null;
+let masterGain = null;
+let muted = false;
+let soundEnabled = false;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.55;
+  masterGain.connect(audioCtx.destination);
+  soundEnabled = true;
+  document.getElementById('sound-hint').classList.add('hidden');
+}
+
+/**
+ * Classic mechanical “tick” — short broadband click + low wooden body resonance.
+ * Alternates slightly between tick and tock for left/right pallet feel.
+ */
+function playTick(isTock = false) {
+  if (!audioCtx || muted || audioCtx.state !== 'running') return;
+
+  const t0 = audioCtx.currentTime;
+  const dur = 0.055;
+
+  // 1) Transient click (noise burst through bandpass)
+  const bufferSize = Math.floor(audioCtx.sampleRate * 0.012);
+  const noiseBuf = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = noiseBuf.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
+  }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuf;
+
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = isTock ? 1850 : 2400;
+  bp.Q.value = 1.8;
+
+  const clickGain = audioCtx.createGain();
+  clickGain.gain.setValueAtTime(0.9, t0);
+  clickGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.025);
+
+  noise.connect(bp);
+  bp.connect(clickGain);
+  clickGain.connect(masterGain);
+  noise.start(t0);
+  noise.stop(t0 + 0.03);
+
+  // 2) Body / plate resonance (short decaying sine)
+  const osc = audioCtx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.value = isTock ? 380 : 520;
+
+  const oscGain = audioCtx.createGain();
+  oscGain.gain.setValueAtTime(0.22, t0);
+  oscGain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+
+  // Soft low thump
+  const thump = audioCtx.createOscillator();
+  thump.type = 'sine';
+  thump.frequency.value = isTock ? 95 : 110;
+  const thumpGain = audioCtx.createGain();
+  thumpGain.gain.setValueAtTime(0.18, t0);
+  thumpGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.04);
+
+  osc.connect(oscGain);
+  oscGain.connect(masterGain);
+  thump.connect(thumpGain);
+  thumpGain.connect(masterGain);
+
+  osc.start(t0);
+  osc.stop(t0 + dur + 0.01);
+  thump.start(t0);
+  thump.stop(t0 + 0.05);
+}
+
+// Unlock audio on first user gesture (browser policy)
+function unlockAudio() {
+  initAudio();
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+['click', 'touchstart', 'keydown'].forEach(evt => {
+  window.addEventListener(evt, unlockAudio, { once: true, passive: true });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  MECHANICAL TIMING & GEAR KINEMATICS
+// ═══════════════════════════════════════════════════════════════════════════════
+/*
+  Classic Swiss lever:
+  - Escape wheel locked most of the second.
+  - Balance impulse unlocks one tooth → second hand jumps.
+  - Going train (fourth → third → center) advances smoothly between ticks
+    because the power of the mainspring is continuous; the escape only
+    releases it in discrete quanta.
+*/
+
+let lastSecond = -1;
+let tickParity = 0;               // alternates tick / tock
+
+// Second hand: target + spring-damper display
+let secondTarget = 0;
+let secondDisplay = 0;
+let secondVel = 0;
+const SEC_STIFFNESS = 0.42;
+const SEC_DAMPING   = 0.68;
+
+// Gear angular positions (radians)
+const gears = {
+  escape: 0,
+  fourth: 0,
+  third: 0,
+  center: 0,
+  intermediate: 0,
+  balance: 0,
+  pallet: 0.35
+};
+
+// Tooth counts used for correct relative speeds when meshing
+const TEETH = {
+  escape: 30,
+  fourth: 42,
+  third: 48,
+  center: 60,
+  intermediate: 36
+};
+
+// Continuous drive angle derived from real time (smooth flow of the train)
+function getTimeState() {
+  const now = new Date();
+  const h = now.getHours() % 12;
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+  const ms = now.getMilliseconds();
+
+  // Fractional seconds for smooth sub-second motion of the going train
+  const secFrac = s + ms / 1000;
+  const minFrac = m + secFrac / 60;
+  const hourFrac = h + minFrac / 60;
+
+  return { h: hourFrac, m: minFrac, s, ms, secFrac };
+}
+
+// ─── Animation ───────────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  const { h, m, s, ms, secFrac } = getTimeState();
+
+  // ── Discrete mechanical tick ──
+  if (s !== lastSecond) {
+    lastSecond = s;
+    secondTarget = (s / 60) * Math.PI * 2;
+    secondVel += 0.62;                    // impulse
+    gears.escape += (Math.PI * 2) / TEETH.escape;  // one tooth
+    gears.pallet = 0.35 + (tickParity % 2 === 0 ? 0.18 : -0.18); // lever flips
+    playTick(tickParity % 2 === 1);
+    tickParity++;
+  }
+
+  // Spring-damper settle of second hand (overshoot → settle)
+  let err = secondTarget - secondDisplay;
+  err = ((err + Math.PI) % (Math.PI * 2)) - Math.PI; // shortest arc
+  secondVel += err * SEC_STIFFNESS;
+  secondVel *= SEC_DAMPING;
+  secondDisplay += secondVel;
+
+  // ── Smooth continuous motion of the going train ──
+  // The train is powered continuously; we advance it proportionally to
+  // fractional seconds so gears keep turning smoothly between ticks.
+  // Ratios approximate a real going train (visual, not horologically exact).
+  const drive = secFrac * Math.PI * 2;           // one full turn per minute base
+
+  // Escape is discrete (already handled); the rest follow smoothly
+  // with proper relative tooth ratios so they appear to mesh.
+  gears.fourth       = -(drive * (TEETH.escape / TEETH.fourth)) * 0.85;
+  gears.third        =  (drive * (TEETH.escape / TEETH.third))  * 0.55;
+  gears.center       = -(drive * (TEETH.escape / TEETH.center)) * 0.35;
+  gears.intermediate =  (drive * (TEETH.escape / TEETH.intermediate)) * 1.1;
+
+  // Balance wheel: continuous oscillation + extra kick after tick
+  const balKick = Math.min(Math.abs(secondVel) * 3.5, 0.55);
+  const balAmp  = 0.58 + balKick;
+  gears.balance = Math.sin(t * Math.PI * 5.0) * balAmp;   // ~2.5 Hz
+
+  // Pallet slowly returns toward neutral after the flip
+  gears.pallet += (0.35 - gears.pallet) * Math.min(1, dt * 4);
+
+  // ── Apply rotations ──
+  hourHand.rotation.y   = -(h / 12) * Math.PI * 2;
+  minuteHand.rotation.y = -(m / 60) * Math.PI * 2;
+  secondHand.rotation.y = -secondDisplay;
+
+  escapeWheel.rotation.y     = -gears.escape;
+  fourthWheel.rotation.y     =  gears.fourth;
+  thirdWheel.rotation.y      =  gears.third;
+  centerWheel.rotation.y     =  gears.center;
+  intermediate.rotation.y    =  gears.intermediate;
+  balance.rotation.y         =  gears.balance;
+  pallet.rotation.y          =  gears.pallet;
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// ─── Events ──────────────────────────────────────────────────────────────────
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+addEventListener('keydown', (e) => {
+  if (e.key === 'r' || e.key === 'R') {
+    camera.position.set(0, 4.5, 22);
+    controls.target.set(0, 0, 0);
+    controls.update();
+  }
+  if (e.key === 'm' || e.key === 'M') {
+    muted = !muted;
+    if (masterGain) {
+      masterGain.gain.setTargetAtTime(muted ? 0 : 0.55, audioCtx.currentTime, 0.05);
+    }
+  }
+});
+</script>
+</body>
+</html>
