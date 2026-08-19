@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#1DB954" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>IA Music — Internet Archive Player</title>
+  <title>IA Music: The Internet Archive Player</title>
   <style>
     :root {
       --accent: #1DB954;
@@ -34,7 +34,7 @@
 
     html, body {
       height: 100%;
-      font-family: "Segoe UI", "Segoe WP", "Helvetica Neue", Arial, sans-serif;
+      font-family: Comfortaa, "Segoe WP", "Helvetica Neue", Arial, sans-serif;
       background: #0a0a0a;
       color: var(--fg);
       overflow: hidden;
@@ -932,26 +932,75 @@
     setInterval(updateClock, 30000);
 
     /* ---------- Search (robust) ---------- */
+    /**
+     * Improved IA search – fielded query so artist/album names return real music
+     * instead of random high-download items that merely mention the words.
+     *
+     * Primary: (creator:"q" OR title:"q" OR subject:"q") AND mediatype:audio
+     * Fallback: broad text search if the fielded query returns too few hits.
+     */
     async function searchIA(query) {
       const cleaned = (query || "").trim();
       if (cleaned.length < 1) return [];
 
-      // Build a solid IA advancedsearch query
-      // Use mediatype:audio and prefer items with downloads
-      const q = encodeURIComponent("(" + cleaned + ") AND mediatype:(audio)");
-      const url =
+      // Escape quotes inside the user query for Lucene safety
+      const safe = cleaned.replace(/"/g, "\\\"");
+
+      // Fielded query – forces relevance to creator / title / subject
+      const fielded =
+        `(creator:"${safe}" OR title:"${safe}" OR subject:"${safe}") AND mediatype:audio`;
+
+      // Optional quality collections (keeps results musical, not random audio dumps)
+      // Uncomment the collections clause if you want stricter filtering:
+      // const collections = " AND (collection:opensource_audio OR collection:etree OR collection:community_audio OR collection:oldtimeradio)";
+      const collections = "";
+
+      const buildUrl = (qStr) =>
         "https://archive.org/advancedsearch.php?" +
-        "q=" + q +
-        "&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=year&fl[]=downloads&fl[]=avg_rating" +
+        "q=" + encodeURIComponent(qStr + collections) +
+        "&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=year&fl[]=downloads&fl[]=collection" +
         "&sort[]=downloads+desc&rows=30&page=1&output=json";
 
       if (searchAbort) searchAbort.abort();
       searchAbort = new AbortController();
 
-      const res = await fetch(url, { signal: searchAbort.signal });
+      // 1) Try the precise fielded query first
+      let res = await fetch(buildUrl(fielded), { signal: searchAbort.signal });
       if (!res.ok) throw new Error("Search HTTP " + res.status);
-      const data = await res.json();
-      return (data.response && data.response.docs) ? data.response.docs : [];
+      let data = await res.json();
+      let docs = (data.response && data.response.docs) ? data.response.docs : [];
+
+      // 2) Fallback: if almost nothing came back, widen to a broad text search
+      //    (still constrained to audio) so obscure queries still work.
+      if (docs.length < 3) {
+        const broad = `(${safe}) AND mediatype:audio`;
+        res = await fetch(buildUrl(broad), { signal: searchAbort.signal });
+        if (res.ok) {
+          data = await res.json();
+          const broadDocs = (data.response && data.response.docs) ? data.response.docs : [];
+          // Prefer fielded results; only replace if broad found substantially more
+          if (broadDocs.length > docs.length) docs = broadDocs;
+        }
+      }
+
+      // Light client-side relevance boost: put exact creator/title matches first
+      const lower = cleaned.toLowerCase();
+      docs.sort((a, b) => {
+        const score = (d) => {
+          let s = 0;
+          const title = String(d.title || "").toLowerCase();
+          const creator = Array.isArray(d.creator)
+            ? d.creator.join(" ").toLowerCase()
+            : String(d.creator || "").toLowerCase();
+          if (title.includes(lower)) s += 3;
+          if (creator.includes(lower)) s += 4;
+          if (title === lower || creator === lower) s += 5;
+          return s;
+        };
+        return score(b) - score(a) || (b.downloads || 0) - (a.downloads || 0);
+      });
+
+      return docs;
     }
 
     async function getItemFiles(identifier) {
@@ -1014,16 +1063,22 @@
           return;
         }
 
+        // Helper: normalize creator (can be string or array from IA)
+        const creatorStr = (doc) => {
+          if (Array.isArray(doc.creator)) return doc.creator.filter(Boolean).join(", ") || "Unknown";
+          return doc.creator || "Unknown";
+        };
+
         if (searchMode === "items") {
           // Album / item grid
           let html = `<div class="album-grid">`;
           docs.forEach(doc => {
             const id = doc.identifier;
             const title = escapeHtml(doc.title || id);
-            const artist = escapeHtml(doc.creator || "Unknown");
+            const artist = escapeHtml(creatorStr(doc));
             const year = doc.year ? " · " + escapeHtml(String(doc.year)) : "";
             html += `
-              <div class="album-tile" data-id="${escapeHtml(id)}" data-title="${title}" data-creator="${artist}">
+              <div class="album-tile" data-id="${escapeHtml(id)}" data-title="${escapeHtml(doc.title || id)}" data-creator="${escapeHtml(creatorStr(doc))}">
                 <div class="art">
                   <img src="${coverUrl(id)}" alt="" loading="lazy" onerror="this.style.opacity='0.3'" />
                 </div>
@@ -1061,10 +1116,14 @@
               <div class="art"><img src="${coverUrl(doc.identifier)}" alt="" loading="lazy" onerror="this.parentElement.style.background='#222'" /></div>
               <div class="meta">
                 <div class="name">${escapeHtml(doc.title || doc.identifier)}</div>
-                <div class="sub">${escapeHtml(doc.creator || "Unknown")}${doc.year ? " · " + escapeHtml(String(doc.year)) : ""}</div>
+                <div class="sub">${escapeHtml(creatorStr(doc))}${doc.year ? " · " + escapeHtml(String(doc.year)) : ""}</div>
               </div>
               <svg class="play-ico" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
-            row.addEventListener("click", () => openItem(doc));
+            row.addEventListener("click", () => openItem({
+              identifier: doc.identifier,
+              title: doc.title || doc.identifier,
+              creator: creatorStr(doc)
+            }));
             list.appendChild(row);
           });
           resultsEl.appendChild(list);
@@ -1717,4 +1776,5 @@
     })();
   </script>
 </body>
+  <footer>Copyleft Soumyajit Roy</footer>
 </html>
