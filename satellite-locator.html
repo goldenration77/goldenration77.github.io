@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Satellite Locator</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --panel: #12182a;
+      --border: #1e2a44;
+      --accent: #00d4ff;
+      --accent-dim: #00a8cc;
+      --text: #e8eef7;
+      --muted: #8b9bb8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --sat: #a78bfa;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--warning);
+      display: inline-block;
+      margin-right: 4px;
+      animation: pulse 1.5s infinite;
+    }
+
+    .status-dot.live {
+      background: var(--success);
+      animation: none;
+    }
+
+    .status-dot.error {
+      background: var(--danger);
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Main layout */
+    .main {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #map {
+      flex: 1;
+      height: 100%;
+      background: #0a0e17;
+      z-index: 1;
+    }
+
+    /* Side panel */
+    .panel {
+      width: 320px;
+      max-width: 100%;
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 500;
+      transition: transform 0.3s ease;
+    }
+
+    .panel-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-header h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      background: var(--border);
+      border: none;
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    button:hover {
+      background: #2a3a5c;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, var(--accent-dim), #7c3aed);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    button.primary:hover {
+      filter: brightness(1.1);
+    }
+
+    .sat-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .sat-card {
+      background: #0f1525;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .sat-card:hover, .sat-card.active {
+      border-color: var(--accent);
+      background: #141c30;
+    }
+
+    .sat-card .name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sat-card .name .badge {
+      font-size: 0.65rem;
+      background: var(--sat);
+      color: #0b0f1a;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .sat-card .meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px 8px;
+    }
+
+    .sat-card .meta span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Info overlay on map */
+    .map-info {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 400;
+      background: rgba(18, 24, 42, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      max-width: 260px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    .map-info .title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--accent);
+    }
+
+    /* Mobile toggle */
+    .toggle-panel {
+      display: none;
+      position: absolute;
+      bottom: 20px;
+      right: 16px;
+      z-index: 600;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-dim), #7c3aed);
+      border: none;
+      color: white;
+      font-size: 1.3rem;
+      box-shadow: 0 4px 16px rgba(0, 168, 204, 0.4);
+      cursor: pointer;
+    }
+
+    /* Legend */
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      left: 12px;
+      z-index: 400;
+      background: rgba(18, 24, 42, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      display: flex;
+      gap: 14px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.device { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .legend-dot.sat { background: var(--sat); box-shadow: 0 0 6px var(--sat); }
+
+    /* Loading / error states */
+    .overlay-msg {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(11, 15, 26, 0.85);
+      z-index: 900;
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .overlay-msg.hidden { display: none; }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Custom markers */
+    .device-marker {
+      background: var(--accent);
+      border: 3px solid #fff;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      box-shadow: 0 0 12px var(--accent), 0 0 4px #fff;
+    }
+
+    .sat-marker {
+      background: var(--sat);
+      border: 2px solid #fff;
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      box-shadow: 0 0 10px var(--sat);
+    }
+
+    .sat-marker.iss {
+      background: #22c55e;
+      box-shadow: 0 0 12px #22c55e;
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .panel {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        transform: translateX(100%);
+        width: min(320px, 90vw);
+      }
+
+      .panel.open {
+        transform: translateX(0);
+      }
+
+      .toggle-panel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      header {
+        padding: 10px 12px;
+      }
+
+      .logo span { font-size: 1rem; }
+    }
+
+    /* Scrollbar */
+    .sat-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .sat-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .sat-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="logo">
+        <div class="logo-icon">🛰</div>
+        <span>Satellite Locator</span>
+      </div>
+      <div class="status-bar">
+        <span id="statusText"><span class="status-dot" id="statusDot"></span>Initializing…</span>
+        <span id="coords">—</span>
+        <span id="updateTime">—</span>
+      </div>
+    </header>
+
+    <div class="main">
+      <div id="map"></div>
+
+      <div class="map-info" id="mapInfo">
+        <div class="title">Your Device</div>
+        <div id="deviceInfo">Locating…</div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot device"></span> You</div>
+        <div class="legend-item"><span class="legend-dot sat"></span> Satellite</div>
+      </div>
+
+      <button class="toggle-panel" id="togglePanel" title="Toggle satellite list">📋</button>
+
+      <aside class="panel" id="panel">
+        <div class="panel-header">
+          <h2>Tracked Satellites <span id="satCount" style="color:var(--muted);font-weight:400"></span></h2>
+          <div class="panel-actions">
+            <button id="btnRefresh" title="Refresh TLE data">↻</button>
+            <button id="btnCenter" title="Center on me">📍</button>
+          </div>
+        </div>
+        <div class="sat-list" id="satList">
+          <div style="padding:20px;text-align:center;color:var(--muted)">Loading satellites…</div>
+        </div>
+      </aside>
+
+      <div class="overlay-msg" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div>Loading satellite data…</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== Configuration ==========
+    const TLE_JSON_URL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=json';
+    const TLE_TEXT_URL = 'https://celestrak.org/NORAD/elements/stations.txt';
+    const UPDATE_INTERVAL_MS = 2000;   // position update rate
+    const TLE_REFRESH_MS = 30 * 60 * 1000; // refresh TLEs every 30 min
+
+    // ========== State ==========
+    let map = null;
+    let deviceMarker = null;
+    let deviceLatLng = null;
+    let satellites = [];          // { name, norad, satrec, marker, lat, lon, alt, velocity }
+    let selectedNorad = null;
+    let updateTimer = null;
+    let tleTimer = null;
+
+    // ========== DOM refs ==========
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const coordsEl = document.getElementById('coords');
+    const updateTimeEl = document.getElementById('updateTime');
+    const deviceInfoEl = document.getElementById('deviceInfo');
+    const satListEl = document.getElementById('satList');
+    const satCountEl = document.getElementById('satCount');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const panel = document.getElementById('panel');
+    const togglePanelBtn = document.getElementById('togglePanel');
+
+    // ========== Helpers ==========
+    function setStatus(text, state = 'loading') {
+      statusText.innerHTML = `<span class="status-dot ${state === 'live' ? 'live' : state === 'error' ? 'error' : ''}" id="statusDot"></span>${text}`;
+    }
+
+    function haversineKm(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 +
+                Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+                Math.sin(dLon/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function formatCoord(n, isLat) {
+      const abs = Math.abs(n).toFixed(4);
+      const dir = isLat ? (n >= 0 ? 'N' : 'S') : (n >= 0 ? 'E' : 'W');
+      return `${abs}° ${dir}`;
+    }
+
+    // ========== Map ==========
+    function initMap() {
+      map = L.map('map', {
+        zoomControl: true,
+        attributionControl: true
+      }).setView([20, 0], 2);
+
+      // Dark theme tiles (CartoDB Dark Matter)
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Zoom control position
+      map.zoomControl.setPosition('topright');
+    }
+
+    function createDeviceIcon() {
+      return L.divIcon({
+        className: '',
+        html: '<div class="device-marker"></div>',
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+    }
+
+    function createSatIcon(isISS = false) {
+      return L.divIcon({
+        className: '',
+        html: `<div class="sat-marker ${isISS ? 'iss' : ''}"></div>`,
+        iconSize: isISS ? [16, 16] : [14, 14],
+        iconAnchor: isISS ? [8, 8] : [7, 7]
+      });
+    }
+
+    // ========== Geolocation ==========
+    function locateDevice() {
+      if (!navigator.geolocation) {
+        deviceInfoEl.textContent = 'Geolocation not supported';
+        setStatus('No geolocation', 'error');
+        // Fallback to a default view
+        map.setView([0, 0], 2);
+        return;
+      }
+
+      setStatus('Locating device…', 'loading');
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          deviceLatLng = {
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude
+          };
+
+          if (deviceMarker) {
+            deviceMarker.setLatLng([deviceLatLng.lat, deviceLatLng.lon]);
+          } else {
+            deviceMarker = L.marker([deviceLatLng.lat, deviceLatLng.lon], {
+              icon: createDeviceIcon(),
+              zIndexOffset: 1000
+            }).addTo(map);
+
+            deviceMarker.bindPopup(`
+              <strong>Your Device</strong><br>
+              ${formatCoord(deviceLatLng.lat, true)}<br>
+              ${formatCoord(deviceLatLng.lon, false)}
+            `);
+          }
+
+          map.setView([deviceLatLng.lat, deviceLatLng.lon], 4);
+          deviceInfoEl.innerHTML = `
+            ${formatCoord(deviceLatLng.lat, true)}<br>
+            ${formatCoord(deviceLatLng.lon, false)}
+          `;
+          coordsEl.textContent = `${deviceLatLng.lat.toFixed(3)}, ${deviceLatLng.lon.toFixed(3)}`;
+          setStatus('Live tracking', 'live');
+        },
+        (err) => {
+          console.warn('Geolocation error:', err);
+          deviceInfoEl.textContent = 'Location denied – using world view';
+          setStatus('Location denied', 'error');
+          map.setView([20, 0], 2);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    }
+
+    // ========== Satellite data ==========
+    async function fetchTLEs() {
+      try {
+        setStatus('Fetching TLE data…', 'loading');
+
+        // Clear old markers
+        satellites.forEach(s => {
+          if (s.marker) map.removeLayer(s.marker);
+        });
+        satellites = [];
+
+        // Try JSON OMM first
+        let loaded = false;
+        try {
+          const res = await fetch(TLE_JSON_URL);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+              data.forEach(obj => {
+                const name = obj.OBJECT_NAME || obj.OBJECT_ID || 'Unknown';
+                const norad = obj.NORAD_CAT_ID;
+                let satrec = null;
+
+                if (obj.TLE_LINE1 && obj.TLE_LINE2) {
+                  satrec = satellite.twoline2satrec(obj.TLE_LINE1.trim(), obj.TLE_LINE2.trim());
+                } else if (typeof satellite.json2satrec === 'function') {
+                  try {
+                    satrec = satellite.json2satrec(obj);
+                  } catch (e) {
+                    console.warn('json2satrec failed for', name, e);
+                  }
+                }
+
+                if (!satrec) return;
+                addSatellite(name, norad, satrec);
+              });
+              loaded = satellites.length > 0;
+            }
+          }
+        } catch (e) {
+          console.warn('JSON TLE fetch failed, trying text…', e);
+        }
+
+        // Fallback: classic 3-line TLE text format
+        if (!loaded) {
+          const res = await fetch(TLE_TEXT_URL);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const text = await res.text();
+          const lines = text.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+          for (let i = 0; i < lines.length; ) {
+            let name = 'Unknown';
+            let line1 = null, line2 = null;
+
+            if (lines[i].startsWith('1 ')) {
+              // 2-line without name
+              line1 = lines[i];
+              line2 = lines[i + 1];
+              i += 2;
+            } else {
+              name = lines[i];
+              line1 = lines[i + 1];
+              line2 = lines[i + 2];
+              i += 3;
+            }
+
+            if (line1 && line2 && line1.startsWith('1 ') && line2.startsWith('2 ')) {
+              try {
+                const satrec = satellite.twoline2satrec(line1, line2);
+                const norad = parseInt(line1.substring(2, 7), 10);
+                addSatellite(name, norad, satrec);
+              } catch (e) {
+                console.warn('Failed to parse TLE for', name, e);
+              }
+            }
+          }
+        }
+
+        if (satellites.length === 0) throw new Error('No valid satellite data received');
+
+        satCountEl.textContent = `(${satellites.length})`;
+        loadingOverlay.classList.add('hidden');
+        setStatus('Live tracking', 'live');
+        updatePositions();
+        renderSatList();
+      } catch (err) {
+        console.error(err);
+        loadingOverlay.innerHTML = `
+          <div style="font-size:2rem">⚠️</div>
+          <div>Failed to load satellite data</div>
+          <div style="font-size:0.85rem;color:var(--muted);max-width:280px">${err.message}<br><br>
+          Check your connection or try again later. CelesTrak may be temporarily unavailable.</div>
+          <button class="primary" onclick="fetchTLEs()" style="margin-top:12px">Retry</button>
+        `;
+        setStatus('Data error', 'error');
+      }
+    }
+
+    function addSatellite(name, norad, satrec) {
+      const isISS = /ISS|ZARYA/i.test(name);
+      const marker = L.marker([0, 0], {
+        icon: createSatIcon(isISS),
+        title: name
+      }).addTo(map);
+
+      marker.bindPopup(`<strong>${name}</strong><br>Loading…`);
+
+      satellites.push({
+        name,
+        norad,
+        satrec,
+        marker,
+        isISS,
+        lat: 0,
+        lon: 0,
+        alt: 0,
+        velocity: 0
+      });
+    }
+
+    function updatePositions() {
+      if (!satellites.length) return;
+
+      const now = new Date();
+      const gmst = satellite.gstime(now);
+
+      satellites.forEach(sat => {
+        try {
+          const pv = satellite.propagate(sat.satrec, now);
+          if (!pv.position || isNaN(pv.position.x)) return;
+
+          const geo = satellite.eciToGeodetic(pv.position, gmst);
+          const lat = satellite.degreesLat(geo.latitude);
+          const lon = satellite.degreesLong(geo.longitude);
+          const alt = geo.height; // km
+
+          // Velocity magnitude (km/s)
+          let vel = 0;
+          if (pv.velocity) {
+            const v = pv.velocity;
+            vel = Math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+          }
+
+          sat.lat = lat;
+          sat.lon = lon;
+          sat.alt = alt;
+          sat.velocity = vel;
+
+          sat.marker.setLatLng([lat, lon]);
+
+          let distHtml = '';
+          if (deviceLatLng) {
+            const dist = haversineKm(deviceLatLng.lat, deviceLatLng.lon, lat, lon);
+            distHtml = `<br>Distance: <strong>${dist.toFixed(0)} km</strong>`;
+          }
+
+          sat.marker.setPopupContent(`
+            <strong>${sat.name}</strong><br>
+            NORAD: ${sat.norad}<br>
+            Lat: ${formatCoord(lat, true)}<br>
+            Lon: ${formatCoord(lon, false)}<br>
+            Alt: <strong>${alt.toFixed(1)} km</strong><br>
+            Speed: ${vel.toFixed(2)} km/s
+            ${distHtml}
+          `);
+        } catch (e) {
+          // Skip failed propagations
+        }
+      });
+
+      updateTimeEl.textContent = now.toLocaleTimeString();
+      renderSatList(); // keep list in sync
+    }
+
+    function renderSatList() {
+      if (!satellites.length) {
+        satListEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">No satellites loaded</div>';
+        return;
+      }
+
+      // Sort by distance if device known, else by name
+      const sorted = [...satellites].sort((a, b) => {
+        if (deviceLatLng) {
+          const da = haversineKm(deviceLatLng.lat, deviceLatLng.lon, a.lat, a.lon);
+          const db = haversineKm(deviceLatLng.lat, deviceLatLng.lon, b.lat, b.lon);
+          return da - db;
+        }
+        return a.name.localeCompare(b.name);
+      });
+
+      satListEl.innerHTML = sorted.map(sat => {
+        let dist = '—';
+        if (deviceLatLng && sat.lat) {
+          dist = haversineKm(deviceLatLng.lat, deviceLatLng.lon, sat.lat, sat.lon).toFixed(0) + ' km';
+        }
+        const active = selectedNorad === sat.norad ? 'active' : '';
+        return `
+          <div class="sat-card ${active}" data-norad="${sat.norad}">
+            <div class="name">
+              ${sat.isISS ? '<span class="badge">ISS</span>' : ''}
+              ${sat.name}
+            </div>
+            <div class="meta">
+              <span>Alt: ${sat.alt ? sat.alt.toFixed(0) + ' km' : '—'}</span>
+              <span>Dist: ${dist}</span>
+              <span>Lat: ${sat.lat ? sat.lat.toFixed(2) + '°' : '—'}</span>
+              <span>Lon: ${sat.lon ? sat.lon.toFixed(2) + '°' : '—'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Click handlers
+      satListEl.querySelectorAll('.sat-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const norad = Number(card.dataset.norad);
+          const sat = satellites.find(s => s.norad === norad);
+          if (sat && sat.lat) {
+            selectedNorad = norad;
+            map.setView([sat.lat, sat.lon], Math.max(map.getZoom(), 4));
+            sat.marker.openPopup();
+            renderSatList();
+          }
+        });
+      });
+    }
+
+    // ========== UI events ==========
+    document.getElementById('btnRefresh').addEventListener('click', () => {
+      fetchTLEs();
+    });
+
+    document.getElementById('btnCenter').addEventListener('click', () => {
+      if (deviceLatLng) {
+        map.setView([deviceLatLng.lat, deviceLatLng.lon], 5);
+      } else {
+        locateDevice();
+      }
+    });
+
+    togglePanelBtn.addEventListener('click', () => {
+      panel.classList.toggle('open');
+    });
+
+    // ========== Boot ==========
+    initMap();
+    locateDevice();
+    fetchTLEs();
+
+    // Continuous position updates
+    updateTimer = setInterval(updatePositions, UPDATE_INTERVAL_MS);
+
+    // Periodic TLE refresh
+    tleTimer = setInterval(fetchTLEs, TLE_REFRESH_MS);
+
+    // Clean up on unload
+    window.addEventListener('beforeunload', () => {
+      clearInterval(updateTimer);
+      clearInterval(tleTimer);
+    });
+  </script>
+</body>
+</html>
