@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHEM4021 | General Chemistry-III | Sticky Notes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Patrick+Hand&family=Roboto:wght@300;400;500;700&display=swap');
+
+  :root {
+    --cork: #c4a574;
+    --cork-dark: #a67c52;
+    --note-yellow: #fff9c4;
+    --note-pink: #f8bbd9;
+    --note-blue: #bbdefb;
+    --note-green: #c8e6c9;
+    --note-orange: #ffe0b2;
+    --note-purple: #e1bee7;
+    --note-teal: #b2dfdb;
+    --ink: #2c3e50;
+    --accent: #e74c3c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #5d4037 0%, #3e2723 100%);
+    min-height: 100vh;
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* Corkboard background */
+  .corkboard {
+    background: 
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08) 0%, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(0,0,0,0.1) 0%, transparent 40%),
+      repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(0,0,0,0.03) 8px, rgba(0,0,0,0.03) 16px),
+      linear-gradient(to bottom, #d7b899, #c4a574);
+    background-color: var(--cork);
+    min-height: 100vh;
+    padding: 20px 15px 60px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 25px 20px;
+    margin-bottom: 25px;
+    background: rgba(255,255,255,0.92);
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    border: 3px solid #fff;
+  }
+
+  header::before {
+    content: '📌';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+  }
+
+  header h1 {
+    font-family: 'Caveat', cursive;
+    font-size: 2.6rem;
+    color: #1a237e;
+    margin-bottom: 5px;
+    line-height: 1.1;
+  }
+
+  header .code {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+
+  header .meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 25px;
+    margin-top: 12px;
+    font-size: 0.95rem;
+    color: #444;
+  }
+
+  header .meta span {
+    background: #f5f5f5;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+  }
+
+  .obj-box {
+    margin-top: 15px;
+    text-align: left;
+    background: #fff8e1;
+    padding: 12px 18px;
+    border-radius: 8px;
+    border-left: 5px solid #ff8f00;
+    font-size: 0.92rem;
+  }
+
+  .obj-box strong { color: #e65100; }
+
+  /* Nav / Topic pills */
+  .nav-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    max-width: 1100px;
+    margin: 0 auto 30px;
+    padding: 0 10px;
+  }
+
+  .nav-pills button {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 1.05rem;
+    padding: 8px 18px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    background: #fff;
+    color: #333;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    transition: all 0.25s ease;
+    border: 2px solid transparent;
+  }
+
+  .nav-pills button:hover,
+  .nav-pills button.active {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  }
+
+  .nav-pills button[data-topic="liquid"] { background: var(--note-yellow); }
+  .nav-pills button[data-topic="colligative"] { background: var(--note-pink); }
+  .nav-pills button[data-topic="solutions"] { background: var(--note-blue); }
+  .nav-pills button[data-topic="aromatic"] { background: var(--note-green); }
+  .nav-pills button[data-topic="grignard"] { background: var(--note-orange); }
+  .nav-pills button[data-topic="coord"] { background: var(--note-purple); }
+  .nav-pills button[data-topic="radio"] { background: var(--note-teal); }
+  .nav-pills button[data-topic="all"] { background: #fff; border-color: #333; }
+
+  .nav-pills button.active {
+    border-color: #111;
+    font-weight: 700;
+  }
+
+  /* Search */
+  .search-wrap {
+    max-width: 500px;
+    margin: 0 auto 25px;
+    position: relative;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    padding: 12px 20px 12px 45px;
+    border: none;
+    border-radius: 30px;
+    font-size: 1rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    background: #fff;
+  }
+
+  .search-wrap::before {
+    content: '🔍';
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+  }
+
+  /* Sticky notes grid */
+  .notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
+  }
+
+  .sticky {
+    position: relative;
+    padding: 22px 20px 28px;
+    border-radius: 2px 2px 8px 8px;
+    box-shadow: 
+      3px 5px 15px rgba(0,0,0,0.25),
+      inset 0 -2px 0 rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transform: rotate(var(--rot, 0deg));
+    min-height: 280px;
+  }
+
+  .sticky:hover {
+    transform: rotate(0deg) scale(1.03);
+    box-shadow: 6px 12px 25px rgba(0,0,0,0.35);
+    z-index: 10;
+  }
+
+  .sticky::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 55px;
+    height: 18px;
+    background: rgba(255,255,255,0.55);
+    border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .sticky.yellow { background: var(--note-yellow); --rot: -1.5deg; }
+  .sticky.pink { background: var(--note-pink); --rot: 1.2deg; }
+  .sticky.blue { background: var(--note-blue); --rot: -0.8deg; }
+  .sticky.green { background: var(--note-green); --rot: 1.5deg; }
+  .sticky.orange { background: var(--note-orange); --rot: -1deg; }
+  .sticky.purple { background: var(--note-purple); --rot: 0.9deg; }
+  .sticky.teal { background: var(--note-teal); --rot: -1.3deg; }
+
+  .sticky h2 {
+    font-family: 'Caveat', cursive;
+    font-size: 1.75rem;
+    margin-bottom: 6px;
+    color: #1a237e;
+    border-bottom: 2px dashed rgba(0,0,0,0.15);
+    padding-bottom: 6px;
+  }
+
+  .sticky .hours {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  .sticky h3 {
+    font-family: 'Patrick Hand', cursive;
+    font-size: 1.2rem;
+    color: #b71c1c;
+    margin: 14px 0 6px;
+  }
+
+  .sticky p, .sticky li {
+    font-size: 0.92rem;
+    line-height: 1.45;
+    margin-bottom: 6px;
+  }
+
+  .sticky ul {
+    padding-left: 18px;
+    margin-bottom: 8px;
+  }
+
+  .sticky .eq {
+    font-family: 'Roboto', monospace;
+    background: rgba(255,255,255,0.55);
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin: 8px 0;
+    font-size: 0.88rem;
+    border-left: 4px solid #1565c0;
+    overflow-x: auto;
+  }
+
+  .sticky .def {
+    background: rgba(255,255,255,0.4);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 4px solid #2e7d32;
+    margin: 8px 0;
+    font-size: 0.9rem;
+  }
+
+  .sticky .tip {
+    background: rgba(255, 235, 59, 0.4);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 4px solid #f57f17;
+    margin: 10px 0;
+    font-size: 0.88rem;
+  }
+
+  .sticky .cheat {
+    background: rgba(255,255,255,0.6);
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 0.85rem;
+    border: 1px dashed #888;
+  }
+
+  .sticky .cheat strong {
+    color: #c62828;
+  }
+
+  /* Expand / collapse */
+  .sticky .full-content {
+    display: none;
+  }
+
+  .sticky.expanded .full-content {
+    display: block;
+  }
+
+  .sticky.expanded {
+    grid-column: 1 / -1;
+    transform: rotate(0deg);
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .toggle-btn {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 6px 16px;
+    background: #1a237e;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: 'Patrick Hand', cursive;
+    transition: background 0.2s;
+  }
+
+  .toggle-btn:hover {
+    background: #3949ab;
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 30px 15px 20px;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.85rem;
+    max-width: 800px;
+    margin: 40px auto 0;
+  }
+
+  footer .refs {
+    background: rgba(0,0,0,0.25);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: left;
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  /* Print / utility */
+  .toolbar {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+  }
+
+  .toolbar button {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    cursor: pointer;
+    font-size: 1.3rem;
+    transition: transform 0.2s;
+  }
+
+  .toolbar button:hover {
+    transform: scale(1.1);
+  }
+
+  /* Highlight search matches */
+  mark {
+    background: #ffeb3b;
+    padding: 1px 3px;
+    border-radius: 2px;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.9rem; }
+    .notes-grid { grid-template-columns: 1fr; gap: 20px; }
+    .sticky { --rot: 0deg !important; }
+  }
+
+  /* Quick recap cards inside */
+  .recap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+  }
+
+  .recap span {
+    background: rgba(0,0,0,0.08);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  table.simple {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin: 10px 0;
+  }
+
+  table.simple th, table.simple td {
+    border: 1px solid rgba(0,0,0,0.15);
+    padding: 5px 8px;
+    text-align: left;
+  }
+
+  table.simple th {
+    background: rgba(0,0,0,0.08);
+  }
+</style>
+</head>
+<body>
+<div class="corkboard">
+
+<header>
+  <div class="code">CHEM4021</div>
+  <h1>General Chemistry-III</h1>
+  <div class="meta">
+    <span>📚 Chemistry MINOR</span>
+    <span>Credit: 3 + 1</span>
+    <span>Theory: 3 Credits</span>
+  </div>
+  <div class="obj-box">
+    <strong>Course Objective:</strong> Discussion on several general aspects of inorganic, organic and physical chemistry.<br>
+    <strong>Course Outcome:</strong> Develop advanced topics of chemistry. Learn to synthesize coordination compounds & estimate hardness of water by chemical analysis.
+  </div>
+</header>
+
+<div class="search-wrap">
+  <input type="text" id="searchInput" placeholder="Search notes... (e.g. Raoult, Grignard, isomerism)" oninput="filterNotes()">
+</div>
+
+<nav class="nav-pills">
+  <button class="active" data-topic="all" onclick="showTopic('all')">All Topics</button>
+  <button data-topic="liquid" onclick="showTopic('liquid')">Liquid State</button>
+  <button data-topic="colligative" onclick="showTopic('colligative')">Colligative</button>
+  <button data-topic="solutions" onclick="showTopic('solutions')">Solutions</button>
+  <button data-topic="aromatic" onclick="showTopic('aromatic')">Aromatic HC</button>
+  <button data-topic="grignard" onclick="showTopic('grignard')">Grignard & AMC</button>
+  <button data-topic="coord" onclick="showTopic('coord')">Coordination</button>
+  <button data-topic="radio" onclick="showTopic('radio')">Radioactivity</button>
+</nav>
+
+<div class="notes-grid" id="notesGrid">
+
+  <!-- ========== 1. LIQUID STATE ========== -->
+  <article class="sticky yellow" data-topic="liquid" id="note-liquid">
+    <h2>💧 Liquid State</h2>
+    <div class="hours">6 Hours · Physical Chemistry</div>
+
+    <h3>📌 Surface Tension</h3>
+    <div class="def">
+      <strong>Definition:</strong> Force acting per unit length perpendicular to an imaginary line drawn on the liquid surface. Tends to minimize surface area.
+    </div>
+    <div class="eq">
+      γ = F / l &nbsp;&nbsp; SI unit: N m⁻¹ &nbsp;&nbsp; CGS: dyne cm⁻¹<br>
+      Dimension: [M T⁻²]
+    </div>
+    <p><strong>Principle (Stalagmometer):</strong> Drop-weight / drop-number method. Number of drops from equal volumes of two liquids is inversely proportional to their surface tensions (approx.).</p>
+    <div class="eq">
+      γ₁ / γ₂ = (n₂ / n₁) × (d₁ / d₂) &nbsp;&nbsp; (n = no. of drops, d = density)
+    </div>
+
+    <h3>📌 Viscosity</h3>
+    <div class="def">
+      <strong>Definition:</strong> Internal resistance offered by a liquid to the flow of one layer over another. Coefficient of viscosity (η) is the tangential force required to maintain unit velocity gradient between two parallel layers of unit area.
+    </div>
+    <div class="eq">
+      η = F / [A · (dv/dx)] &nbsp;&nbsp; Unit: poise (CGS) or Pa·s (SI)<br>
+      1 poise = 0.1 Pa·s
+    </div>
+    <p><strong>Ostwald Viscometer:</strong> Time of flow of fixed volume through a capillary under gravity.</p>
+    <div class="eq">
+      η₁ / η₂ = (t₁ / t₂) × (d₁ / d₂)
+    </div>
+
+    <div class="full-content">
+      <h3>🌡️ Temperature Effect (Qualitative)</h3>
+      <ul>
+        <li><strong>Surface Tension ↓</strong> with ↑ temperature (kinetic energy increases → intermolecular forces weaken).</li>
+        <li><strong>Viscosity ↓</strong> with ↑ temperature for liquids (molecules move more freely).</li>
+        <li>For gases, viscosity increases with temperature.</li>
+      </ul>
+      <div class="tip">
+        <strong>Quick Tip:</strong> At critical temperature, surface tension becomes zero (no distinction between liquid & vapour).
+      </div>
+      <div class="cheat">
+        <strong>CHEATSHEET</strong><br>
+        • Higher intermolecular force → higher γ & η<br>
+        • Stalagmometer → surface tension<br>
+        • Ostwald → viscosity<br>
+        • Both decrease with temperature for pure liquids
+      </div>
+    </div>
+    <button class="toggle-btn" onclick="toggleNote(this)">Show Full Notes ▼</button>
+  </article>
+
+  <!-- ========== 2. COLLIGATIVE PROPERTIES ========== -->
+  <article class="sticky pink" data-topic="colligative" id="note-colligative">
+    <h2>⚖️ Colligative Properties</h2>
+    <div class="hours">6 Hours · Physical Chemistry</div>
+
+    <div class="def">
+      Properties that depend only on the <strong>number</strong> of solute particles, not on their nature.
+    </div>
+
+    <h3>1. Relative Lowering of Vapour Pressure (Raoult’s Law)</h3>
+    <div class="eq">
+      (P⁰ − Pₛ) / P⁰ = x₂ &nbsp;&nbsp; (x₂ = mole fraction of solute)<br>
+      For dilute solutions: (P⁰ − Pₛ) / P⁰ ≈ n₂ / n₁
+    </div>
+
+    <h3>2. Elevation of Boiling Point</h3>
+    <div class="eq">
+      ΔT<sub>b</sub> = K<sub>b</sub> · m &nbsp;&nbsp; (m = molality)<br>
+      K<sub>b</sub> = RT<sub>b</sub>² / (1000 · ΔH<sub>vap</sub>) &nbsp;&nbsp; (ebullioscopic constant)
+    </div>
+
+    <h3>3. Depression of Freezing Point</h3>
+    <div class="eq">
+      ΔT<sub>f</sub> = K<sub>f</sub> · m<br>
+      K<sub>f</sub> = RT<sub>f</sub>² / (1000 · ΔH<sub>fus</sub>) &nbsp;&nbsp; (cryoscopic constant)
+    </div>
+
+    <div class="full-content">
+      <h3>4. Osmosis & Osmotic Pressure</h3>
+      <div class="def">
+        Spontaneous flow of solvent through a semi-permeable membrane from dilute to concentrated solution.
+      </div>
+      <div class="eq">
+        π = CRT &nbsp;&nbsp; (van’t Hoff) &nbsp;&nbsp; for dilute solutions<br>
+        πV = nRT &nbsp;&nbsp; (like ideal gas)
+      </div>
+      <p>Isotonic: same π. Hypertonic / Hypotonic relative terms.</p>
+
+      <h3>Abnormal Colligative Properties & van’t Hoff Factor</h3>
+      <div class="eq">
+        i = Observed colligative property / Calculated colligative property<br>
+        i = Observed molar mass / Calculated molar mass (inverse for association)
+      </div>
+      <ul>
+        <li><strong>Dissociation</strong> (electrolytes): i > 1 &nbsp; e.g. NaCl → i ≈ 2</li>
+        <li><strong>Association</strong> (e.g. acetic acid in benzene): i < 1</li>
+      </ul>
+      <div class="eq">
+        Degree of dissociation α = (i − 1) / (n − 1)<br>
+        Degree of association α = (1 − i) / (1 − 1/n)
+      </div>
+
+      <h3>Molecular Weight Determination</h3>
+      <p>From any colligative property: measure ΔT<sub>b</sub>, ΔT<sub>f</sub>, π or relative lowering → calculate M of unknown solute.</p>
+
+      <div class="cheat">
+        <strong>CHEATSHEET – Order of magnitude</strong><br>
+        ΔT<sub>b</sub> / ΔT<sub>f</sub> ∝ m &nbsp;|&nbsp; π ∝ C &nbsp;|&nbsp; Relative lowering ∝ x₂<br>
+        Useful for non-volatile solute + volatile solvent.<br>
+        Osmotic pressure is most accurate for high MW (polymers).
+      </div>
+    </div>
+    <button class="toggle-btn" onclick="toggleNote(this)">Show Full Notes ▼</button>
+  </article>
+
+  <!-- ========== 3. SOLUTIONS ========== -->
+  <article class="sticky blue" data-topic="solutions" id="note-solutions">
+    <h2>🧪 Solutions</h2>
+    <div class="hours">8 Hours · Physical Chemistry</div>
+
+    <h3>Ideal Solutions & Raoult’s Law</h3>
+    <div class="def">
+      Ideal solution: obeys Raoult’s law over entire composition range.<br>
+      P<sub>A</sub> = P<sub>A</sub>⁰ · x<sub>A</sub> &nbsp;;&nbsp; P<sub>B</sub> = P<sub>B</sub>⁰ · x<sub>B</sub><br>
+      ΔH<sub>mix</sub> = 0, ΔV<sub>mix</sub> = 0, intermolecular forces A–A ≈ B–B ≈ A–B.
+    </div>
+
+    <h3>Non-Ideal Solutions – Deviations</h3>
+    <ul>
+      <li><strong>Positive deviation:</strong> P<sub>total</sub> > expected (A–B weaker). Example: ethanol + water, acetone + CS₂. Forms minimum boiling azeotrope.</li>
+      <li><strong>Negative deviation:</strong> P<sub>total</sub> < expected (A–B stronger). Example: chloroform + acetone, HNO₃ + water. Forms maximum boiling azeotrope.</li>
+    </ul>
+
+    <div class="full-content">
+      <h3>Vapour Pressure & Temperature Composition Curves</h3>
+      <p>Ideal: linear VP vs composition. Non-ideal: curved. Boiling point diagrams show liquid + vapour curves; tie-line used with Lever rule.</p>
+
+      <h3>Lever Rule</h3>
+      <div class="eq">
+        n<sub>liquid</sub> / n<sub>vapour</sub> = (x<sub>overall</sub> − y) / (x − x<sub>overall</sub>)<br>
+        (lengths of tie-line segments inverse to amounts)
+      </div>
+
+      <h3>Azeotropes</h3>
+      <div class="def">
+        Constant boiling mixtures that distill without change in composition. Cannot be separated by simple fractional distillation.
+      </div>
+      <ul>
+        <li>Minimum boiling (positive deviation) e.g. 95.6% ethanol–water</li>
+        <li>Maximum boiling (negative deviation) e.g. 68% HNO₃–water</li>
+      </ul>
+
+      <h3>Critical Solution Temperature (CST)</h3>
+      <p>Temperature above (UCST) or below (LCST) which two partially miscible liquids become completely miscible.</p>
+      <ul>
+        <li>Phenol–water: UCST ≈ 66 °C</li>
+        <li>Triethylamine–water: LCST</li>
+        <li>Nicotine–water: both UCST & LCST</li>
+      </ul>
+      <p>Impurity usually raises UCST / lowers LCST (affects mutual solubility).</p>
+
+      <h3>Immiscible Liquids – Steam Distillation</h3>
+      <div class="def">
+        Used for purifying organic liquids immiscible with water that decompose at their normal BP. Mixture boils when sum of vapour pressures equals atmospheric pressure → lower temperature.
+      </div>
+      <div class="eq">
+        P_total = P_org + P_water = 1 atm
+      </div>
+
+      <h3>Nernst Distribution Law</h3>
+      <div class="eq">
+        C₁ / C₂ = K<sub>D</sub> &nbsp;&nbsp; (at constant T, for dilute solutions)<br>
+        If solute associates/dissociates → modified form.
+      </div>
+      <p><strong>Applications:</strong> Solvent extraction (multiple extractions better than one), determination of association, purification.</p>
+
+      <div class="cheat">
+        <strong>CHEATSHEET</strong><br>
+        Ideal → no ΔH/ΔV · Positive → max VP, min BP azeotrope<br>
+        Negative → min VP, max BP azeotrope<br>
+        Steam distillation → immiscible + lower T<br>
+        Nernst → solvent extraction efficiency
+      </div>
+    </div>
+    <button class="toggle-btn" onclick="toggleNote(this)">Show Full Notes ▼</button>
+  </article>
+
+  <!-- ========== 4. AROMATIC HYDROCARBONS ========== -->
+  <article class="sticky green" data-topic="aromatic" id="note-aromatic">
+    <h2>⬡ Aromatic Hydrocarbons</h2>
+    <div class="hours">6 Hours · Organic Chemistry</div>
+
+    <h3>Benzene – Preparations</h3>
+    <ul>
+      <li><strong>From phenol:</strong> C₆H₅OH + Zn dust → C₆H₆ + ZnO (distillation)</li>
+      <li><strong>Decarboxylation:</strong> C₆H₅COONa + NaOH (CaO) → C₆H₆ + Na₂CO₃</li>
+      <li><strong>From acetylene:</strong> 3 HC≡CH → C₆H₆ (red-hot Cu tube, 500 °C)</li>
+      <li><strong>From benzene sulphonic acid:</strong> C₆H₅SO₃H + H₂O → C₆H₆ + H₂SO₄ (superheated steam / dilute acid)</li>
+    </ul>
+
+    <h3>Electrophilic Substitution – General Mechanism</h3>
+    <p>π-electrons attack electrophile E⁺ → σ-complex (arenium ion) → loss of H⁺ → substituted benzene. Rate-determining step is formation of σ-complex.</p>
+
+    <div class="full-content">
+      <h3>Key Reactions (up to 4C side chain)</h3>
+      <table class="simple">
+        <tr><th>Reaction</th><th>Reagents</th><th>Product</th></tr>
+        <tr><td>Nitration</td><td>conc. HNO₃ + H₂SO₄</td><td>Nitrobenzene</td></tr>
+        <tr><td>Chlorination</td><td>Cl₂ / FeCl₃ (or AlCl₃)</td><td>Chlorobenzene</td></tr>
+        <tr><td>Bromination</td><td>Br₂ / FeBr₃</td><td>Bromobenzene</td></tr>
+        <tr><td>Sulphonation</td><td>conc. / fuming H₂SO₄</td><td>Benzene sulphonic acid</td></tr>
+        <tr><td>FC Alkylation</td><td>RCl / AlCl₃ (R ≤ 4C)</td><td>Alkylbenzene</td></tr>
+        <tr><td>FC Acylation</td><td>RCOCl / AlCl₃</td><td>Acylbenzene (ketone)</td></tr>
+      </table>
+
+      <h3>Nitration Mechanism (detailed)</h3>
+      <div class="eq">
+        HNO₃ + 2H₂SO₄ ⇌ NO₂⁺ + H₃O⁺ + 2HSO₄⁻<br>
+        Benzene + NO₂⁺ → σ-complex → Nitrobenzene + H⁺
+      </div>
+
+      <h3>Side-chain Oxidation</h3>
+      <p>Alkylbenzenes (any length, but ≤4C here) → benzoic acid with alkaline / acidic KMnO₄ (or K₂Cr₂O₇). Side chain must have at least one benzylic H.</p>
+      <div class="eq">
+        C₆H₅–CH₂R  --[KMnO₄]→  C₆H₅–COOH
+      </div>
+
+      <div class="tip">
+        <strong>Note:</strong> FC alkylation can rearrange (carbocation); acylation does not. Polyalkylation possible; acylation stops after one.
+      </div>
+
+      <div class="cheat">
+        <strong>CHEATSHEET</strong><br>
+        Prep: phenol/Zn · Na-benzoate/soda-lime · acetylene · sulphonic acid<br>
+        EAS: NO₂⁺, X₂/FeX₃, SO₃, R⁺/RCO⁺ with AlCl₃<br>
+        Side-chain ox → always –COOH if benzylic H present
+      </div>
+    </div>
+    <button class="toggle-btn" onclick="toggleNote(this)">Show Full Notes ▼</button>
+  </article>
+
+  <!-- ========== 5. GRIGNARD & ACTIVE METHYLENE ========== -->
+  <article class="sticky orange" data-topic="grignard" id="note-grignard">
+    <h2>🔧 Grignard & Active Methylene</h2>
+    <div class="hours">6 Hours · Organic Chemistry</div>
+
+    <h3>Grignard Reagent (RMgX)</h3>
+    <div class="def">
+      Prepared from alkyl/aryl halide + Mg in dry ether. Highly polar Cδ⁻–Mgδ⁺. Acts as strong nucleophile & base. Moisture sensitive.
+    </div>
+
+    <h3>Synthetic Uses of GR</h3>
+    <ul>
+      <li><strong>With aldehydes:</strong> RMgX + R′CHO → secondary alcohol (HCHO → primary)</li>
+      <li><strong>With ketones:</strong> → tertiary alcohol</li>
+      <li><strong>With CO₂:</strong> → carboxylic acid (after hydrolysis)</li>
+      <li><strong>With esters:</strong> → tertiary alcohol (two equivalents)</li>
+      <li><strong>With epoxides:</strong> → primary alcohol (longer chain)</li>
+      <li><strong>With H₂O / ROH / acid:</strong> → hydrocarbon (RH)</li>
+    </ul>
+
+    <div class="full-content">
+      <h3>Ethyl Acetoacetate (EAA) – Active Methylene</h3>
+      <div class="def">
+        CH₃COCH₂COOC₂H₅. Methylene group flanked by two carbonyls → acidic H (pKa ≈ 11). Forms stable enolate with base (NaOEt).
+      </div>
+      <p><strong>Acetoacetic Ester Synthesis:</strong></p>
+      <ol>
+        <li>Generate enolate (NaOEt)</li>
+        <li>Alkylate with R–X (SN2)</li>
+        <li>Can dialkylate</li>
+        <li>Ketonic hydrolysis (dil. acid / heat) → methyl ketone RCH₂COCH₃</li>
+        <li>Acid hydrolysis (conc. alkali then acid) → substituted acetic acid</li>
+      </ol>
+
+      <h3>Diethyl Malonate (DEM)</h3>
+      <div class="def">
+        CH₂(COOC₂H₅)₂. Similar active methylene. Used for synthesis of substituted acetic acids / monocarboxylic acids.
+      </div>
+      <p>Alkylation → hydrolysis → decarboxylation → R–CH₂COOH (or R₂CHCOOH).</p>
+
+      <div class="tip">
+        <strong>Key Difference:</strong> EAA → ketones or acids; DEM → primarily substituted acetic acids. Both require anhydrous conditions for alkylation step.
+      </div>
+
+      <div class="cheat">
+        <strong>CHEATSHEET</strong><br>
+        GR: RMgX + carbonyl → alcohol; + CO₂ → acid<br>
+        EAA: enolate + RX → alkylated → ketone (ketonic hyd.) or acid<br>
+        DEM: enolate + RX → alkylated → RCH₂COOH after hyd. + decarb.<br>
+        Active methylene = acidic H between two EWG
+      </div>
+    </div>
+    <button class="toggle-btn" onclick="toggleNote(this)">Show Full Notes ▼</button>
+  </article>
+
+  <!-- ========== 6. COORDINATION CHEMISTRY ========== -->
+  <article class="sticky purple" data-topic="coord" id="note-coord">
+    <h2>🔗 Coordination Chemistry</h2>
+    <div class="hours">10 Hours · Inorganic Chemistry</div>
+
+    <h3>Double Salts vs Complex Salts</h3>
+    <ul>
+      <li><strong>Double salt:</strong> exists only in solid; in solution gives all ions (e.g. Mohr’s salt).</li>
+      <li><strong>Complex salt:</strong> retains identity in solution; complex ion does not fully dissociate (e.g. K₄[Fe(CN)₆]).</li>
+    </ul>
+
+    <h3>Werner’s Theory</h3>
+    <div class="def">
+      Primary valency (ionizable, = oxidation state) satisfied by negative ions.<br>
+      Secondary valency (non-ionizable, = coordination number) satisfied by ligands directed in space (geometry).
+    </div>
+
+    <h3>Ligands & Chelates</h3>
+    <ul>
+      <li>Monodentate: Cl⁻, NH₃, H₂O, CO, CN⁻</li>
+      <li>Bidentate: en, ox²⁻, bipy, acac⁻</li>
+      <li>Polydentate: EDTA⁴⁻ (hexadentate)</li>
+      <li><strong>Chelate:</strong> ring-forming polydentate ligand complex → extra stability (chelate effect).</li>
+    </ul>
+
+    <div class="full-content">
+      <h3>Coordination Number & Geometry</h3>
+      <p>CN 2: linear · CN 4: tetrahedral or square planar · CN 6: octahedral (most common).</p>
+
+      <h3>IUPAC Nomenclature (up to 2 metal centres)</h3>
+      <ol>
+        <li>Cation first, then anion.</li>
+        <li>Ligands alphabetical order (ignore prefixes di, tri…).</li>
+        <li>Anionic ligands end in –o (chloro, cyano, oxalato…).</li>
+        <li>Neutral ligands keep name (aqua, ammine, carbonyl…).</li>
+        <li>Metal name + oxidation state in Roman numerals (in brackets).</li>
+        <li>If complex is anion, metal ends in –ate.</li>
+      </ol>
+      <div class="eq">
+        Example: [Co(NH₃)₄Cl₂]Cl → tetraamminedichloridocobalt(III) chloride<br>
+        K₃[Fe(CN)₆] → potassium hexacyanidoferrate(III)
+      </div>
+
+      <h3>Isomerism</h3>
+      <p><strong>Constitutional (Structural):</strong></p>
+      <ul>
+        <li>Ionization: [Co(NH₃)₅Br]SO₄ vs [Co(NH₃)₅SO₄]Br</li>
+        <li>Hydrate: [Cr(H₂O)₆]Cl₃ vs [Cr(H₂O)₅Cl]Cl₂·H₂O</li>
+        <li>Linkage: –NO₂ (nitro) vs –ONO (nitrito); –SCN vs –NCS</li>
+        <li>Coordination: different ligands between two complexes</li>
+        <li>Coordination position (dinuclear)</li>
+      </ul>
+      <p><strong>Stereo isomerism:</strong></p>
+      <ul>
+        <li><strong>Geometrical:</strong> cis–trans in square planar (MA₂B₂) & octahedral (MA₄B₂, MA₃B₃).</li>
+        <li><strong>Optical:</strong> non-superimposable mirror images. Common in octahedral [M(AA)₃], cis-[M(AA)₂B₂]. Square planar rarely optically active.</li>
+      </ul>
+
+      <div class="cheat">
+        <strong>CHEATSHEET</strong><br>
+        Werner: primary = OS, secondary = CN<br>
+        Chelate effect → higher stability<br>
+        Nomenclature: ligands α-betical, metal(OS), –ate if anionic<br>
+        Geo: cis/trans · Optical: chiral octahedral especially with bidentate
+      </div>
+    </div>
+    <button class="toggle-btn" onclick="toggleNote(this)">Show Full Notes ▼</button>
+  </article>
+
+  <!-- ========== 7. RADIOACTIVITY ========== -->
+  <article class="sticky teal" data-topic="radio" id="note-radio">
+    <h2>☢️ Radioactivity</h2>
+    <div class="hours">3 Hours · Inorganic / Nuclear</div>
+
+    <h3>Characteristics</h3>
+    <ul>
+      <li>Spontaneous emission of radiation from unstable nuclei.</li>
+      <li>Independent of chemical state, temperature, pressure (nuclear phenomenon).</li>
+      <li>First-order kinetics.</li>
+    </ul>
+
+    <h3>Types of Rays</h3>
+    <table class="simple">
+      <tr><th>Ray</th><th>Nature</th><th>Charge</th><th>Mass</th><th>Penetrating power</th></tr>
+      <tr><td>α</td><td>He²⁺ nucleus</td><td>+2</td><td>4 u</td><td>Least (stopped by paper)</td></tr>
+      <tr><td>β</td><td>electron (e⁻)</td><td>−1</td><td>~0</td><td>Medium (Al sheet)</td></tr>
+      <tr><td>γ</td><td>EM radiation</td><td>0</td><td>0</td><td>Highest (Pb needed)</td></tr>
+    </table>
+
+    <div class="full-content">
+      <h3>Radioactive Disintegration & Equilibrium</h3>
+      <p>Parent → Daughter. Successive decays can reach secular or transient equilibrium when half-lives differ appropriately.</p>
+
+      <h3>Decay Constant, Half-life, Average Life</h3>
+      <div class="eq">
+        Rate = λN &nbsp;&nbsp; (λ = decay constant)<br>
+        N = N₀ e<sup>−λt</sup><br>
+        t<sub>1/2</sub> = ln2 / λ ≈ 0.693 / λ<br>
+        Average life (τ) = 1 / λ = 1.44 × t<sub>1/2</sub>
+      </div>
+
+      <h3>Artificial Transmutation & Artificial Radioactivity</h3>
+      <p>Stable nucleus bombarded by particles (α, n, p, d…) → new nucleus (may be radioactive). Example: ¹⁴N + α → ¹⁷O + p (Rutherford). Curie & Joliot: artificial radioactivity (e.g. ²⁷Al + α → ³⁰P + n; ³⁰P is positron emitter).</p>
+
+      <h3>Uses</h3>
+      <ul>
+        <li>Carbon-14 dating</li>
+        <li>Medical: ⁶⁰Co (γ therapy), ¹³¹I (thyroid), ⁹⁹ᵐTc (imaging)</li>
+        <li>Tracers in chemical & biological studies</li>
+        <li>Power generation (nuclear reactors)</li>
+        <li>Sterilization, thickness gauges, smoke detectors (²⁴¹Am)</li>
+      </ul>
+
+      <div class="cheat">
+        <strong>CHEATSHEET</strong><br>
+        α = He nucleus · β = e⁻ · γ = photon<br>
+        t<sub>1/2</sub> = 0.693/λ · τ = 1/λ<br>
+        Artificial radioactivity: induced by bombardment<br>
+        Applications: dating, medicine, tracers, energy
+      </div>
+    </div>
+    <button class="toggle-btn" onclick="toggleNote(this)">Show Full Notes ▼</button>
+  </article>
+
+</div><!-- end notes-grid -->
+
+<footer>
+  <div class="refs">
+    <strong>Reference Books:</strong><br>
+    Lee – Concise Inorganic Chemistry · Douglas & McDaniel – Concepts & Models · Sharpe – Inorganic Chemistry · Morrison & Boyd – Organic Chemistry · Sarkar – General & Inorganic Chemistry · Rakshit – Physical Chemistry · Rastogi & Misra – Chemical Thermodynamics · Sharma & Sharma / Bajpai / Kapoor – Physical Chemistry · Ghoshal – Numerical Problems
+  </div>
+  <p style="margin-top:15px;">CHEM4021 · General Chemistry-III · Sticky Notes Cheatsheet · Single-file HTML</p>
+</footer>
+
+</div><!-- corkboard -->
+
+<div class="toolbar">
+  <button onclick="window.print()" title="Print">🖨️</button>
+  <button onclick="expandAll()" title="Expand All">📂</button>
+  <button onclick="collapseAll()" title="Collapse All">📁</button>
+  <button onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Top">⬆️</button>
+</div>
+
+<script>
+  function toggleNote(btn) {
+    const sticky = btn.closest('.sticky');
+    sticky.classList.toggle('expanded');
+    btn.textContent = sticky.classList.contains('expanded') ? 'Hide Full Notes ▲' : 'Show Full Notes ▼';
+  }
+
+  function showTopic(topic) {
+    document.querySelectorAll('.nav-pills button').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.nav-pills button[data-topic="${topic}"]`).classList.add('active');
+
+    document.querySelectorAll('.sticky').forEach(note => {
+      if (topic === 'all' || note.dataset.topic === topic) {
+        note.style.display = 'block';
+      } else {
+        note.style.display = 'none';
+      }
+    });
+  }
+
+  function filterNotes() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    document.querySelectorAll('.sticky').forEach(note => {
+      const text = note.textContent.toLowerCase();
+      if (!q || text.includes(q)) {
+        note.style.display = 'block';
+        // simple highlight
+        if (q.length > 2) {
+          // keep it light – full highlight would need more complex DOM walk
+        }
+      } else {
+        note.style.display = 'none';
+      }
+    });
+    // reset nav to all when searching
+    if (q) {
+      document.querySelectorAll('.nav-pills button').forEach(b => b.classList.remove('active'));
+      document.querySelector('.nav-pills button[data-topic="all"]').classList.add('active');
+    }
+  }
+
+  function expandAll() {
+    document.querySelectorAll('.sticky').forEach(s => {
+      s.classList.add('expanded');
+      const btn = s.querySelector('.toggle-btn');
+      if (btn) btn.textContent = 'Hide Full Notes ▲';
+    });
+  }
+
+  function collapseAll() {
+    document.querySelectorAll('.sticky').forEach(s => {
+      s.classList.remove('expanded');
+      const btn = s.querySelector('.toggle-btn');
+      if (btn) btn.textContent = 'Show Full Notes ▼';
+    });
+  }
+
+  // Keyboard shortcut
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      document.getElementById('searchInput').focus();
+    }
+  });
+</script>
+</body>
+</html>
