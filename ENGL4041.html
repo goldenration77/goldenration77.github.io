@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENGL4041: Language and Creativity – Ability Enhancement Course Textbook</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&display=swap');
+  body { font-family: 'Inter', system-ui, sans-serif; }
+  h1, h2, h3, h4 { font-family: 'Merriweather', serif; }
+  .prose { max-width: 75ch; }
+  .ipa { font-family: 'Charis SIL', 'Doulos SIL', 'Lucida Sans Unicode', 'Arial Unicode MS', sans-serif; font-size: 1.15em; }
+  .card-hover:hover { transform: translateY(-8px); box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.15); }
+  .nav-link.active { background: #1e40af; color: white; }
+  .speech-organs svg { max-width: 100%; height: auto; }
+  .phoneme-card { transition: all 0.2s; }
+  .phoneme-card:hover { background: #eff6ff; border-color: #3b82f6; }
+  details summary { cursor: pointer; }
+  .quiz-option { cursor: pointer; transition: background 0.15s; }
+  .quiz-option:hover { background: #dbeafe; }
+  .correct { background: #dcfce7 !important; border-color: #16a34a; }
+  .incorrect { background: #fee2e2 !important; border-color: #dc2626; }
+  @media print { .no-print { display: none; } nav { position: static; } }
+</style>
+</head>
+<body class="bg-slate-300 text-slate-800 leading-relaxed">
+
+<!-- Sticky Navigation -->
+<nav class="no-print sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+    <div class="font-bold text-blue-800 text-lg">ENGL4041 · Language & Creativity</div>
+    <div class="flex flex-wrap gap-1 text-sm">
+      <a href="#home" class="nav-link px-3 py-1.5 rounded-md hover:bg-blue-100">Home</a>
+      <a href="#varieties" class="nav-link px-3 py-1.5 rounded-md hover:bg-blue-100">1. Varieties</a>
+      <a href="#emotion" class="nav-link px-3 py-1.5 rounded-md hover:bg-blue-100">2. Emotion</a>
+      <a href="#register" class="nav-link px-3 py-1.5 rounded-md hover:bg-blue-100">3. Register</a>
+      <a href="#ambiguity" class="nav-link px-3 py-1.5 rounded-md hover:bg-blue-100">4. Ambiguity</a>
+      <a href="#phonetics" class="nav-link px-3 py-1.5 rounded-md hover:bg-blue-100">5. Phonetics</a>
+      <a href="#quiz" class="nav-link px-3 py-1.5 rounded-md hover:bg-blue-100">Quiz</a>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-5xl mx-auto px-4 py-8">
+
+<!-- HOME / TITLE -->
+<section id="home" class="mb-16">
+  <div class="bg-gradient-to-br from-red-900 to-red-900 text-white rounded-2xl p-8 md:p-12 shadow-xl mb-10">
+    <p class="text-blue-200 text-sm uppercase tracking-widest mb-2">Ability Enhancement Course (AEC)</p>
+    <h1 class="text-3xl md:text-5xl font-bold mb-3">ENGL4041: Language and Creativity</h1>
+    <p class="text-xl text-blue-100 mb-6">[2 Credits · Full Marks: 50 (Theory 40 + IA 10) · Lecture Hours: 30]</p>
+    <div class="grid md:grid-cols-2 gap-6 text-sm">
+      <div>
+        <h3 class="font-semibold text-blue-200 mb-1">Course Objectives</h3>
+        <p>Master basic skills of language for everyday and specialised use. Develop perspectives on language use and the ability to express thoughts and emotions in both speech and writing.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold text-blue-200 mb-1">Course Outcome</h3>
+        <p>Students gain a clear understanding of the distinctness of human language, verbal & non-verbal modes, registers, gender-sensitivity, collocational rules, and creative language use across contexts.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+    <h2 class="text-2xl font-bold text-blue-900 mb-4">Syllabus Overview & Lecture Hours</h2>
+    <div class="overflow-x-auto">
+      <canvas id="hoursChart" height="120"></canvas>
+    </div>
+    <ul class="mt-6 space-y-2 text-sm">
+      <li><strong>Language Varieties</strong> (6 hrs) – Distinctness, dialects, idiolects, isogloss, verbal/non-verbal, formal/informal, gender-sensitivity, new-age language</li>
+      <li><strong>Language and Emotion</strong> (6 hrs) – Plain vs figurative language; figures of speech</li>
+      <li><strong>Register and Collocation</strong> (4 hrs) – Definition, examples, strong/weak collocation, violation</li>
+      <li><strong>Understanding Ambiguity</strong> (4 hrs) – Lexical & syntactic ambiguity</li>
+      <li><strong>English Phonetics</strong> (10 hrs) – Speech organs, airstream, 44 phonemes, three-term description</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 1. LANGUAGE VARIETIES -->
+<section id="varieties" class="mb-20">
+  <h2 class="text-3xl font-bold text-blue-900 border-b-4 border-blue-600 pb-2 mb-6">1. Language Varieties</h2>
+
+  <article class="prose max-w-none space-y-8">
+    <div class="bg-blue-50 border-l-4 border-blue-600 p-5 rounded-r-lg">
+      <h3 class="text-xl font-bold text-blue-900 mt-0">1.1 Distinctness of Human Language</h3>
+      <p>Human language is unique among animal communication systems. Key design features (after Charles Hockett) include:</p>
+      <ul class="list-disc pl-5 space-y-1">
+        <li><strong>Duality of patterning</strong> – meaningless sounds (phonemes) combine into meaningful units (morphemes/words).</li>
+        <li><strong>Productivity / Creativity</strong> – infinite novel sentences from finite rules.</li>
+        <li><strong>Displacement</strong> – talk about things not present in time or space.</li>
+        <li><strong>Arbitrariness</strong> – no necessary link between form and meaning (except onomatopoeia).</li>
+        <li><strong>Cultural transmission</strong> – language is learned, not genetically fixed.</li>
+        <li><strong>Reflexivity</strong> – language can be used to talk about language itself.</li>
+      </ul>
+      <p>Animal systems are largely stimulus-bound, closed, and lack true productivity and displacement at the level of human language.</p>
+    </div>
+
+    <div>
+      <h3 class="text-xl font-bold text-blue-900">1.2 Dialects, Idiolects and Isogloss</h3>
+      <div class="grid md:grid-cols-3 gap-4 my-4">
+        <div class="bg-white p-4 rounded-xl shadow border card-hover">
+          <h4 class="font-bold text-indigo-700">Dialect</h4>
+          <p class="text-sm">A variety of a language associated with a particular region or social group. Differs in pronunciation (accent), vocabulary and grammar. Example: British English vs Indian English; Cockney vs RP.</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow border card-hover">
+          <h4 class="font-bold text-indigo-700">Idiolect</h4>
+          <p class="text-sm">The unique language variety of an individual speaker – personal vocabulary preferences, pronunciation quirks, favourite syntactic patterns. Everyone has an idiolect.</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow border card-hover">
+          <h4 class="font-bold text-indigo-700">Isogloss</h4>
+          <p class="text-sm">A geographic boundary line marking the limit of a particular linguistic feature (e.g., the line separating “bucket” vs “pail” usage areas in the USA).</p>
+        </div>
+      </div>
+      <p>Dialect continua exist: neighbouring dialects are mutually intelligible, but distant ones may not be. Standard languages are often socially privileged dialects.</p>
+    </div>
+
+    <div>
+      <h3 class="text-xl font-bold text-blue-900">1.3 Verbal and Non-Verbal Language</h3>
+      <p><strong>Verbal language</strong> uses words (spoken or written). <strong>Non-verbal language</strong> includes body language, gestures, facial expressions, posture, proxemics (space), haptics (touch), paralanguage (tone, pitch, volume, speed), and silence.</p>
+      <div class="bg-slate-100 p-4 rounded-lg my-4">
+        <p class="font-semibold mb-2">Key Insight:</p>
+        <p>Research (Mehrabian and others) often cited suggests that in emotional communication a large proportion of meaning is carried by non-verbal cues. However, the exact percentages are context-dependent. In academic or technical discourse, verbal content dominates; in interpersonal conflict, non-verbal signals become critical.</p>
+      </div>
+      <p>Both modes work together. A sarcastic “Nice job!” is understood through tone and facial expression contradicting the words.</p>
+    </div>
+
+    <div>
+      <h3 class="text-xl font-bold text-blue-900">1.4 Formal and Informal Language</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm border-collapse">
+          <thead>
+            <tr class="bg-blue-800 text-white">
+              <th class="p-3 text-left">Feature</th>
+              <th class="p-3 text-left">Formal</th>
+              <th class="p-3 text-left">Informal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b"><td class="p-3 font-medium">Vocabulary</td><td class="p-3">Latinate, precise, abstract</td><td class="p-3">Everyday, slang, contractions</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-3 font-medium">Grammar</td><td class="p-3">Complete sentences, passive voice common</td><td class="p-3">Fragments, active, ellipsis</td></tr>
+            <tr class="border-b"><td class="p-3 font-medium">Pronouns</td><td class="p-3">Avoidance of “I/you” in academic writing</td><td class="p-3">Frequent personal pronouns</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-3 font-medium">Context</td><td class="p-3">Academic papers, legal documents, formal speeches</td><td class="p-3">Chat, friends, social media, diaries</td></tr>
+            <tr><td class="p-3 font-medium">Example</td><td class="p-3">“The experiment yielded significant results.”</td><td class="p-3">“The test worked out really well!”</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="text-xl font-bold text-blue-900">1.5 Gender-Sensitivity of Language</h3>
+      <p>Language both reflects and shapes social attitudes toward gender. Traditional English has been criticised for:</p>
+      <ul class="list-disc pl-5">
+        <li>Generic “he” / “man” (mankind, chairman, fireman)</li>
+        <li>Asymmetrical terms (master/mistress, bachelor/spinster)</li>
+        <li>Lexical gaps or markedness (male as default)</li>
+      </ul>
+      <p><strong>Gender-sensitive alternatives:</strong> humankind, chairperson/chair, firefighter, Ms, singular “they”, “he or she”, or rephrasing to plural. Many institutions now adopt inclusive language guidelines. Awareness of gendered metaphors and stereotypes in discourse is also part of linguistic sensitivity.</p>
+    </div>
+
+    <div>
+      <h3 class="text-xl font-bold text-blue-900">1.6 New-Age Language: Journalism, Social Media & Internet</h3>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="bg-white border rounded-xl p-4 shadow-sm">
+          <h4 class="font-bold text-rose-700">Journalism</h4>
+          <p class="text-sm">Inverted pyramid, headlinese (omission of articles/verbs), loaded language, soundbites, clickbait, neutrality claims vs framing.</p>
+        </div>
+        <div class="bg-white border rounded-xl p-4 shadow-sm">
+          <h4 class="font-bold text-emerald-700">Social Media</h4>
+          <p class="text-sm">Character limits → abbreviations, emoji as paralanguage, hashtags as topic markers, memes as multimodal texts, performative identity.</p>
+        </div>
+        <div class="bg-white border rounded-xl p-4 shadow-sm">
+          <h4 class="font-bold text-violet-700">Internet / Digital</h4>
+          <p class="text-sm">Netspeak, LOLspeak, reaction GIFs, multimodal discourse, rapid lexical innovation (ghosting, adulting, rizz), code-switching across platforms.</p>
+        </div>
+      </div>
+      <p class="mt-4">Digital language is characterised by multimodality, speed, ephemerality, and the blending of spoken and written features (e.g., “gonna”, ellipsis, capitalisation for emphasis).</p>
+    </div>
+  </article>
+</section>
+
+<!-- 2. LANGUAGE AND EMOTION -->
+<section id="emotion" class="mb-20">
+  <h2 class="text-3xl font-bold text-blue-900 border-b-4 border-blue-600 pb-2 mb-6">2. Language and Emotion</h2>
+
+  <div class="bg-amber-50 border-l-4 border-amber-500 p-5 rounded-r-lg mb-8">
+    <h3 class="text-xl font-bold text-amber-900 mt-0">2.1 Plain Language vs Figurative Language</h3>
+    <p><strong>Plain (literal) language</strong> aims at clarity, directness and denotation. It is preferred in science, law, technical writing and instructions.</p>
+    <p><strong>Figurative language</strong> uses figures of speech to create imagery, emotional resonance, emphasis or aesthetic pleasure. It dominates poetry, advertising, rhetoric and everyday creative talk.</p>
+    <p>Both have value. Over-figurative academic writing can obscure meaning; purely plain creative writing may lack impact.</p>
+  </div>
+
+  <h3 class="text-2xl font-bold text-blue-900 mb-4">2.2 Figures of Speech (Detailed)</h3>
+  <div class="grid md:grid-cols-2 gap-5">
+
+    <div class="bg-white rounded-xl shadow border p-5 card-hover">
+      <h4 class="font-bold text-lg text-indigo-700">Simile</h4>
+      <p class="text-sm text-slate-600 mb-2">Explicit comparison using <em>like</em> or <em>as</em>.</p>
+      <p class="italic">“My love is like a red, red rose.” (Burns)</p>
+      <p class="text-xs mt-2">Creates vivid, accessible imagery.</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow border p-5 card-hover">
+      <h4 class="font-bold text-lg text-indigo-700">Metaphor</h4>
+      <p class="text-sm text-slate-600 mb-2">Implicit comparison – one thing <em>is</em> another.</p>
+      <p class="italic">“All the world’s a stage.” (Shakespeare)</p>
+      <p class="text-xs mt-2">More compressed and powerful than simile.</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow border p-5 card-hover">
+      <h4 class="font-bold text-lg text-indigo-700">Epigram</h4>
+      <p class="text-sm text-slate-600 mb-2">Concise, witty, often paradoxical statement.</p>
+      <p class="italic">“I can resist everything except temptation.” (Oscar Wilde)</p>
+      <p class="text-xs mt-2">Memorable and pointed.</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow border p-5 card-hover">
+      <h4 class="font-bold text-lg text-indigo-700">Oxymoron</h4>
+      <p class="text-sm text-slate-600 mb-2">Juxtaposition of contradictory terms.</p>
+      <p class="italic">“sweet sorrow”, “living death”, “deafening silence”</p>
+      <p class="text-xs mt-2">Highlights complexity or tension.</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow border p-5 card-hover">
+      <h4 class="font-bold text-lg text-indigo-700">Irony</h4>
+      <p class="text-sm text-slate-600 mb-2">Meaning opposite to (or sharply different from) the literal sense. Types: verbal, situational, dramatic.</p>
+      <p class="italic">“What a pleasant day!” (said during a storm)</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow border p-5 card-hover">
+      <h4 class="font-bold text-lg text-indigo-700">Innuendo</h4>
+      <p class="text-sm text-slate-600 mb-2">Indirect suggestion, often of something discreditable or sexual; implication rather than open statement.</p>
+      <p class="italic">“He is a man of great experience… in certain matters.”</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow border p-5 card-hover">
+      <h4 class="font-bold text-lg text-indigo-700">Pun</h4>
+      <p class="text-sm text-slate-600 mb-2">Play on words exploiting multiple meanings or similar sounds.</p>
+      <p class="italic">“A boiled egg every morning is hard to beat.”</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow border p-5 card-hover">
+      <h4 class="font-bold text-lg text-indigo-700">Alliteration</h4>
+      <p class="text-sm text-slate-600 mb-2">Repetition of initial consonant sounds.</p>
+      <p class="italic">“Peter Piper picked a peck of pickled peppers.”</p>
+      <p class="text-xs mt-2">Creates rhythm and memorability.</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow border p-5 card-hover">
+      <h4 class="font-bold text-lg text-indigo-700">Hyperbole</h4>
+      <p class="text-sm text-slate-600 mb-2">Deliberate exaggeration for emphasis or effect.</p>
+      <p class="italic">“I’ve told you a million times!”</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow border p-5 card-hover">
+      <h4 class="font-bold text-lg text-indigo-700">Hyperbaton</h4>
+      <p class="text-sm text-slate-600 mb-2">Unusual or inverted word order for emphasis or poetic effect.</p>
+      <p class="italic">“This I must see.” / “Object there was none. Passion there was none.” (Poe)</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow border p-5 card-hover md:col-span-2">
+      <h4 class="font-bold text-lg text-indigo-700">Assonance</h4>
+      <p class="text-sm text-slate-600 mb-2">Repetition of vowel sounds within nearby words (often creating internal rhyme or musicality).</p>
+      <p class="italic">“The rain in Spain stays mainly in the plain.” / “Hear the mellow wedding bells.” (Poe)</p>
+    </div>
+  </div>
+
+  <div class="mt-8 bg-white p-5 rounded-xl shadow">
+    <h4 class="font-bold mb-3">Why Figures of Speech Matter for Creativity</h4>
+    <p>They allow speakers and writers to compress complex ideas, evoke emotion, create aesthetic pleasure, and persuade. Mastery of figures is central to rhetorical skill and literary creativity.</p>
+  </div>
+</section>
+
+<!-- 3. REGISTER AND COLLOCATION -->
+<section id="register" class="mb-20">
+  <h2 class="text-3xl font-bold text-blue-900 border-b-4 border-blue-600 pb-2 mb-6">3. Register and Collocation</h2>
+
+  <div class="space-y-8">
+    <div>
+      <h3 class="text-xl font-bold text-blue-900">3.1 What is Register?</h3>
+      <p>Register is a variety of language defined by its use in a particular social setting or for a particular purpose. It is determined by three main variables (Halliday):</p>
+      <ul class="list-disc pl-5 my-3">
+        <li><strong>Field</strong> – what is happening / subject matter</li>
+        <li><strong>Tenor</strong> – who is taking part / relationships</li>
+        <li><strong>Mode</strong> – channel (spoken/written, monologue/dialogue, etc.)</li>
+      </ul>
+      <p><strong>Examples of registers:</strong></p>
+      <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-3 mt-3">
+        <span class="bg-blue-100 text-blue-900 px-3 py-2 rounded-lg text-sm">Legal register</span>
+        <span class="bg-green-100 text-green-900 px-3 py-2 rounded-lg text-sm">Medical register</span>
+        <span class="bg-purple-100 text-purple-900 px-3 py-2 rounded-lg text-sm">Academic register</span>
+        <span class="bg-amber-100 text-amber-900 px-3 py-2 rounded-lg text-sm">Journalistic register</span>
+        <span class="bg-rose-100 text-rose-900 px-3 py-2 rounded-lg text-sm">Religious/liturgical</span>
+        <span class="bg-cyan-100 text-cyan-900 px-3 py-2 rounded-lg text-sm">Sports commentary</span>
+        <span class="bg-indigo-100 text-indigo-900 px-3 py-2 rounded-lg text-sm">Advertising</span>
+        <span class="bg-teal-100 text-teal-900 px-3 py-2 rounded-lg text-sm">Classroom talk</span>
+      </div>
+      <p class="mt-4">Each register has characteristic vocabulary (technical terms), grammatical preferences, and discourse structure.</p>
+    </div>
+
+    <div>
+      <h3 class="text-xl font-bold text-blue-900">3.2 Collocation</h3>
+      <p>Collocation is the tendency of certain words to co-occur more frequently than would be expected by chance. J.R. Firth: “You shall know a word by the company it keeps.”</p>
+
+      <div class="grid md:grid-cols-2 gap-6 my-6">
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
+          <h4 class="font-bold text-emerald-800 text-lg">Strong Collocations</h4>
+          <p class="text-sm mb-3">Highly predictable; limited choice of partners.</p>
+          <ul class="text-sm space-y-1">
+            <li>blonde hair (not *blonde car)</li>
+            <li>commit a crime / suicide</li>
+            <li>make a decision / mistake</li>
+            <li>heavy rain / traffic / smoker</li>
+            <li>rancid butter / oil</li>
+            <li>torrential rain</li>
+          </ul>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <h4 class="font-bold text-amber-800 text-lg">Weak / Open Collocations</h4>
+          <p class="text-sm mb-3">More flexible; many possible partners.</p>
+          <ul class="text-sm space-y-1">
+            <li>good / nice / lovely day</li>
+            <li>big / large / huge problem</li>
+            <li>do / make / carry out research</li>
+            <li>important / significant / major issue</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bg-red-50 border-l-4 border-red-500 p-5 rounded-r-lg">
+        <h4 class="font-bold text-red-800">Collocational Violation</h4>
+        <p>Using a word combination that is grammatically possible but collocationally unnatural or incorrect for native speakers.</p>
+        <p class="mt-2"><strong>Examples of violation:</strong></p>
+        <ul class="list-disc pl-5 text-sm">
+          <li>*strong rain → heavy rain</li>
+          <li>*make a photo → take a photo</li>
+          <li>*do a decision → make a decision</li>
+          <li>*powerful tea → strong tea</li>
+          <li>*commit a mistake → make a mistake / commit an error</li>
+        </ul>
+        <p class="mt-3 text-sm">Awareness of collocation is essential for natural, fluent and creative language use. Learners often produce grammatically correct but collocationally odd sentences.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. UNDERSTANDING AMBIGUITY -->
+<section id="ambiguity" class="mb-20">
+  <h2 class="text-3xl font-bold text-blue-900 border-b-4 border-blue-600 pb-2 mb-6">4. Understanding Ambiguity</h2>
+
+  <p class="mb-6">Ambiguity occurs when a linguistic expression can be interpreted in more than one way. It is a central feature of language that can be exploited creatively (puns, poetry, advertising) or cause misunderstanding.</p>
+
+  <div class="grid md:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-lg border overflow-hidden">
+      <div class="bg-indigo-700 text-white p-4">
+        <h3 class="text-xl font-bold m-0">Lexical Ambiguity</h3>
+        <p class="text-indigo-100 text-sm m-0">Arises from words having multiple meanings (polysemy or homonymy)</p>
+      </div>
+      <div class="p-5 space-y-3">
+        <div class="border-l-4 border-indigo-400 pl-3">
+          <p class="font-medium">“The bank was closed.”</p>
+          <p class="text-sm text-slate-600">Financial institution <em>or</em> river bank?</p>
+        </div>
+        <div class="border-l-4 border-indigo-400 pl-3">
+          <p class="font-medium">“She can’t bear children.”</p>
+          <p class="text-sm text-slate-600">Tolerate them <em>or</em> give birth to them?</p>
+        </div>
+        <div class="border-l-4 border-indigo-400 pl-3">
+          <p class="font-medium">“He saw the bark.”</p>
+          <p class="text-sm text-slate-600">Tree covering <em>or</em> dog’s sound?</p>
+        </div>
+        <div class="border-l-4 border-indigo-400 pl-3">
+          <p class="font-medium">“They are flying planes.”</p>
+          <p class="text-sm text-slate-600">Planes that fly <em>or</em> people who fly planes?</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg border overflow-hidden">
+      <div class="bg-rose-700 text-white p-4">
+        <h3 class="text-xl font-bold m-0">Syntactic Ambiguity</h3>
+        <p class="text-rose-100 text-sm m-0">Arises from different possible grammatical structures</p>
+      </div>
+      <div class="p-5 space-y-3">
+        <div class="border-l-4 border-rose-400 pl-3">
+          <p class="font-medium">“Visiting relatives can be boring.”</p>
+          <p class="text-sm text-slate-600">Relatives who visit <em>or</em> the act of visiting relatives?</p>
+        </div>
+        <div class="border-l-4 border-rose-400 pl-3">
+          <p class="font-medium">“The chicken is ready to eat.”</p>
+          <p class="text-sm text-slate-600">Chicken is cooked <em>or</em> chicken wants to eat?</p>
+        </div>
+        <div class="border-l-4 border-rose-400 pl-3">
+          <p class="font-medium">“I saw the man with the telescope.”</p>
+          <p class="text-sm text-slate-600">Man holding telescope <em>or</em> I used a telescope?</p>
+        </div>
+        <div class="border-l-4 border-rose-400 pl-3">
+          <p class="font-medium">“Old men and women”</p>
+          <p class="text-sm text-slate-600">[Old men] and women <em>or</em> old [men and women]?</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-8 bg-slate-100 rounded-xl p-6">
+    <h4 class="font-bold text-lg mb-2">Creative Use of Ambiguity</h4>
+    <p>Writers and speakers deliberately use ambiguity for humour (puns), depth (poetry), or persuasion (advertising slogans). In everyday communication, context, prosody and shared knowledge usually resolve ambiguity. In legal and technical writing, ambiguity is carefully avoided.</p>
+  </div>
+</section>
+
+<!-- 5. ENGLISH PHONETICS -->
+<section id="phonetics" class="mb-20">
+  <h2 class="text-3xl font-bold text-blue-900 border-b-4 border-blue-600 pb-2 mb-6">5. English Phonetics</h2>
+
+  <div class="space-y-10">
+    <!-- Speech Organs -->
+    <div>
+      <h3 class="text-2xl font-bold text-blue-900 mb-4">5.1 Speech Organs (Articulators)</h3>
+      <p class="mb-4">Speech is produced by the coordinated action of the respiratory, phonatory and articulatory systems.</p>
+
+      <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h4 class="font-bold mb-3">Major Organs Involved</h4>
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+          <div class="bg-blue-50 p-3 rounded-lg"><strong>Lungs & Diaphragm</strong> – power source (airstream)</div>
+          <div class="bg-blue-50 p-3 rounded-lg"><strong>Trachea</strong> – windpipe</div>
+          <div class="bg-blue-50 p-3 rounded-lg"><strong>Larynx / Vocal folds</strong> – phonation (voicing)</div>
+          <div class="bg-blue-50 p-3 rounded-lg"><strong>Pharynx</strong> – throat cavity</div>
+          <div class="bg-blue-50 p-3 rounded-lg"><strong>Soft palate (Velum)</strong> – opens/closes nasal cavity</div>
+          <div class="bg-blue-50 p-3 rounded-lg"><strong>Hard palate</strong></div>
+          <div class="bg-blue-50 p-3 rounded-lg"><strong>Alveolar ridge</strong></div>
+          <div class="bg-blue-50 p-3 rounded-lg"><strong>Teeth</strong></div>
+          <div class="bg-blue-50 p-3 rounded-lg"><strong>Lips</strong></div>
+          <div class="bg-blue-50 p-3 rounded-lg"><strong>Tongue</strong> (tip, blade, front, back, root)</div>
+          <div class="bg-blue-50 p-3 rounded-lg"><strong>Nasal cavity</strong></div>
+          <div class="bg-blue-50 p-3 rounded-lg"><strong>Jaw</strong></div>
+        </div>
+      </div>
+
+      <!-- Simple SVG diagram of speech organs -->
+      <div class="bg-slate-100 rounded-xl p-4 overflow-x-auto">
+        <svg viewBox="0 0 400 320" class="mx-auto max-w-md speech-organs" xmlns="http://www.w3.org/2000/svg">
+          <!-- Head outline -->
+          <path d="M80 40 Q200 10 280 50 Q320 100 300 180 Q290 250 200 280 Q110 250 90 180 Q70 100 80 40" fill="#fef3c7" stroke="#92400e" stroke-width="2"/>
+          <!-- Nasal cavity -->
+          <ellipse cx="180" cy="70" rx="40" ry="18" fill="#bfdbfe" stroke="#1e40af"/>
+          <text x="180" y="75" text-anchor="middle" font-size="10" fill="#1e3a8a">Nasal cavity</text>
+          <!-- Oral cavity -->
+          <path d="M120 110 Q200 90 260 120 Q250 160 180 170 Q110 160 120 110" fill="#fecaca" stroke="#b91c1c"/>
+          <text x="185" y="140" text-anchor="middle" font-size="10" fill="#7f1d1d">Oral cavity</text>
+          <!-- Tongue -->
+          <path d="M140 145 Q180 130 230 150 Q220 175 170 175 Q140 165 140 145" fill="#fca5a5" stroke="#991b1b"/>
+          <text x="180" y="160" text-anchor="middle" font-size="9">Tongue</text>
+          <!-- Lips -->
+          <ellipse cx="100" cy="150" rx="18" ry="12" fill="#fda4af" stroke="#be123c"/>
+          <text x="100" y="175" text-anchor="middle" font-size="9">Lips</text>
+          <!-- Teeth -->
+          <rect x="115" y="125" width="12" height="18" fill="white" stroke="#64748b"/>
+          <text x="150" y="120" font-size="9" fill="#475569">Teeth</text>
+          <!-- Alveolar -->
+          <text x="145" y="110" font-size="8" fill="#475569">Alveolar ridge</text>
+          <!-- Soft palate -->
+          <path d="M230 95 Q260 100 255 130" fill="none" stroke="#7c3aed" stroke-width="3"/>
+          <text x="270" y="115" font-size="9" fill="#5b21b6">Soft palate</text>
+          <!-- Pharynx -->
+          <rect x="210" y="170" width="30" height="50" rx="5" fill="#c4b5fd" stroke="#6d28d9"/>
+          <text x="225" y="200" text-anchor="middle" font-size="9" fill="#4c1d95">Pharynx</text>
+          <!-- Larynx -->
+          <ellipse cx="225" cy="240" rx="25" ry="15" fill="#a5b4fc" stroke="#4338ca"/>
+          <text x="225" y="245" text-anchor="middle" font-size="9" fill="#312e81">Larynx</text>
+          <!-- Lungs label -->
+          <text x="200" y="300" text-anchor="middle" font-size="11" fill="#1e40af" font-weight="bold">← from Lungs (airstream)</text>
+        </svg>
+        <p class="text-center text-xs text-slate-500 mt-2">Simplified schematic of the vocal tract (not to scale)</p>
+      </div>
+    </div>
+
+    <!-- Airstream -->
+    <div>
+      <h3 class="text-2xl font-bold text-blue-900 mb-4">5.2 Airstream Mechanism</h3>
+      <p>The airstream mechanism is the way air is set in motion for speech. There are three main types used in the world’s languages:</p>
+      <div class="overflow-x-auto my-4">
+        <table class="w-full text-sm border-collapse bg-white shadow rounded-lg overflow-hidden">
+          <thead>
+            <tr class="bg-blue-800 text-white">
+              <th class="p-3 text-left">Mechanism</th>
+              <th class="p-3 text-left">Initiator</th>
+              <th class="p-3 text-left">Direction</th>
+              <th class="p-3 text-left">English?</th>
+              <th class="p-3 text-left">Examples elsewhere</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b"><td class="p-3 font-medium">Pulmonic</td><td class="p-3">Lungs + diaphragm</td><td class="p-3">Egressive (out)</td><td class="p-3 text-green-700 font-bold">Yes – all sounds</td><td class="p-3">Almost all languages</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-3 font-medium">Glottalic</td><td class="p-3">Larynx (glottis)</td><td class="p-3">Egressive (ejectives) / Ingressive (implosives)</td><td class="p-3">No (rare paralinguistic)</td><td class="p-3">Amharic, Quechua, many African languages</td></tr>
+            <tr><td class="p-3 font-medium">Velaric (Lingual)</td><td class="p-3">Tongue + velum</td><td class="p-3">Ingressive (clicks)</td><td class="p-3">No (only “tut-tut” etc.)</td><td class="p-3">Khoisan, Zulu, Xhosa</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="bg-blue-50 p-4 rounded-lg"><strong>English uses exclusively the pulmonic egressive airstream</strong> – air is pushed out from the lungs. All 44 phonemes are produced this way.</p>
+    </div>
+
+    <!-- 44 Phonemes -->
+    <div>
+      <h3 class="text-2xl font-bold text-blue-900 mb-4">5.3 The 44 Phonemes of English (RP Reference)</h3>
+      <p class="mb-4">Received Pronunciation (RP) is traditionally described as having <strong>24 consonant phonemes</strong> and <strong>20 vowel phonemes</strong> (12 monophthongs + 8 diphthongs).</p>
+
+      <div class="mb-6">
+        <canvas id="phonemeChart" height="100"></canvas>
+      </div>
+
+      <!-- Consonants -->
+      <h4 class="text-xl font-bold text-indigo-800 mb-3">Consonant Phonemes (24)</h4>
+      <div class="overflow-x-auto mb-8">
+        <table class="w-full text-sm border-collapse bg-white shadow rounded-lg">
+          <thead>
+            <tr class="bg-indigo-800 text-white">
+              <th class="p-2">IPA</th>
+              <th class="p-2">Example</th>
+              <th class="p-2">Voicing</th>
+              <th class="p-2">Place</th>
+              <th class="p-2">Manner</th>
+            </tr>
+          </thead>
+          <tbody class="text-center">
+            <tr class="border-b"><td class="p-2 ipa">/p/</td><td class="p-2">pin</td><td class="p-2">−</td><td class="p-2">Bilabial</td><td class="p-2">Plosive</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-2 ipa">/b/</td><td class="p-2">bin</td><td class="p-2">+</td><td class="p-2">Bilabial</td><td class="p-2">Plosive</td></tr>
+            <tr class="border-b"><td class="p-2 ipa">/t/</td><td class="p-2">tin</td><td class="p-2">−</td><td class="p-2">Alveolar</td><td class="p-2">Plosive</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-2 ipa">/d/</td><td class="p-2">din</td><td class="p-2">+</td><td class="p-2">Alveolar</td><td class="p-2">Plosive</td></tr>
+            <tr class="border-b"><td class="p-2 ipa">/k/</td><td class="p-2">kin</td><td class="p-2">−</td><td class="p-2">Velar</td><td class="p-2">Plosive</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-2 ipa">/ɡ/</td><td class="p-2">give</td><td class="p-2">+</td><td class="p-2">Velar</td><td class="p-2">Plosive</td></tr>
+            <tr class="border-b"><td class="p-2 ipa">/tʃ/</td><td class="p-2">chin</td><td class="p-2">−</td><td class="p-2">Palato-alveolar</td><td class="p-2">Affricate</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-2 ipa">/dʒ/</td><td class="p-2">gin</td><td class="p-2">+</td><td class="p-2">Palato-alveolar</td><td class="p-2">Affricate</td></tr>
+            <tr class="border-b"><td class="p-2 ipa">/f/</td><td class="p-2">fin</td><td class="p-2">−</td><td class="p-2">Labiodental</td><td class="p-2">Fricative</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-2 ipa">/v/</td><td class="p-2">van</td><td class="p-2">+</td><td class="p-2">Labiodental</td><td class="p-2">Fricative</td></tr>
+            <tr class="border-b"><td class="p-2 ipa">/θ/</td><td class="p-2">thin</td><td class="p-2">−</td><td class="p-2">Dental</td><td class="p-2">Fricative</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-2 ipa">/ð/</td><td class="p-2">this</td><td class="p-2">+</td><td class="p-2">Dental</td><td class="p-2">Fricative</td></tr>
+            <tr class="border-b"><td class="p-2 ipa">/s/</td><td class="p-2">sin</td><td class="p-2">−</td><td class="p-2">Alveolar</td><td class="p-2">Fricative</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-2 ipa">/z/</td><td class="p-2">zoo</td><td class="p-2">+</td><td class="p-2">Alveolar</td><td class="p-2">Fricative</td></tr>
+            <tr class="border-b"><td class="p-2 ipa">/ʃ/</td><td class="p-2">ship</td><td class="p-2">−</td><td class="p-2">Palato-alveolar</td><td class="p-2">Fricative</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-2 ipa">/ʒ/</td><td class="p-2">measure</td><td class="p-2">+</td><td class="p-2">Palato-alveolar</td><td class="p-2">Fricative</td></tr>
+            <tr class="border-b"><td class="p-2 ipa">/h/</td><td class="p-2">hat</td><td class="p-2">−</td><td class="p-2">Glottal</td><td class="p-2">Fricative</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-2 ipa">/m/</td><td class="p-2">man</td><td class="p-2">+</td><td class="p-2">Bilabial</td><td class="p-2">Nasal</td></tr>
+            <tr class="border-b"><td class="p-2 ipa">/n/</td><td class="p-2">no</td><td class="p-2">+</td><td class="p-2">Alveolar</td><td class="p-2">Nasal</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-2 ipa">/ŋ/</td><td class="p-2">sing</td><td class="p-2">+</td><td class="p-2">Velar</td><td class="p-2">Nasal</td></tr>
+            <tr class="border-b"><td class="p-2 ipa">/l/</td><td class="p-2">lip</td><td class="p-2">+</td><td class="p-2">Alveolar</td><td class="p-2">Approximant (lateral)</td></tr>
+            <tr class="border-b bg-slate-50"><td class="p-2 ipa">/r/</td><td class="p-2">red</td><td class="p-2">+</td><td class="p-2">Post-alveolar</td><td class="p-2">Approximant</td></tr>
+            <tr class="border-b"><td class="p-2 ipa">/j/</td><td class="p-2">yes</td><td class="p-2">+</td><td class="p-2">Palatal</td><td class="p-2">Approximant</td></tr>
+            <tr><td class="p-2 ipa">/w/</td><td class="p-2">wet</td><td class="p-2">+</td><td class="p-2">Labial-velar</td><td class="p-2">Approximant</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Vowels -->
+      <h4 class="text-xl font-bold text-indigo-800 mb-3">Vowel Phonemes (20)</h4>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <h5 class="font-semibold mb-2">Monophthongs (12)</h5>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm bg-white shadow rounded-lg">
+              <thead><tr class="bg-indigo-700 text-white"><th class="p-2">IPA</th><th class="p-2">Keyword</th><th class="p-2">Example</th></tr></thead>
+              <tbody class="text-center">
+                <tr class="border-b"><td class="ipa p-2">/iː/</td><td class="p-2">FLEECE</td><td class="p-2">see, me</td></tr>
+                <tr class="border-b bg-slate-50"><td class="ipa p-2">/ɪ/</td><td class="p-2">KIT</td><td class="p-2">sit, big</td></tr>
+                <tr class="border-b"><td class="ipa p-2">/e/</td><td class="p-2">DRESS</td><td class="p-2">bed, red</td></tr>
+                <tr class="border-b bg-slate-50"><td class="ipa p-2">/æ/</td><td class="p-2">TRAP</td><td class="p-2">cat, black</td></tr>
+                <tr class="border-b"><td class="ipa p-2">/ɑː/</td><td class="p-2">PALM / START</td><td class="p-2">father, car</td></tr>
+                <tr class="border-b bg-slate-50"><td class="ipa p-2">/ɒ/</td><td class="p-2">LOT</td><td class="p-2">hot, not</td></tr>
+                <tr class="border-b"><td class="ipa p-2">/ɔː/</td><td class="p-2">THOUGHT</td><td class="p-2">law, caught</td></tr>
+                <tr class="border-b bg-slate-50"><td class="ipa p-2">/ʊ/</td><td class="p-2">FOOT</td><td class="p-2">put, book</td></tr>
+                <tr class="border-b"><td class="ipa p-2">/uː/</td><td class="p-2">GOOSE</td><td class="p-2">food, blue</td></tr>
+                <tr class="border-b bg-slate-50"><td class="ipa p-2">/ʌ/</td><td class="p-2">STRUT</td><td class="p-2">cup, love</td></tr>
+                <tr class="border-b"><td class="ipa p-2">/ɜː/</td><td class="p-2">NURSE</td><td class="p-2">bird, serve</td></tr>
+                <tr><td class="ipa p-2">/ə/</td><td class="p-2">schwa</td><td class="p-2">about, sofa</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h5 class="font-semibold mb-2">Diphthongs (8)</h5>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm bg-white shadow rounded-lg">
+              <thead><tr class="bg-indigo-700 text-white"><th class="p-2">IPA</th><th class="p-2">Keyword</th><th class="p-2">Example</th></tr></thead>
+              <tbody class="text-center">
+                <tr class="border-b"><td class="ipa p-2">/eɪ/</td><td class="p-2">FACE</td><td class="p-2">day, make</td></tr>
+                <tr class="border-b bg-slate-50"><td class="ipa p-2">/aɪ/</td><td class="p-2">PRICE</td><td class="p-2">my, time</td></tr>
+                <tr class="border-b"><td class="ipa p-2">/ɔɪ/</td><td class="p-2">CHOICE</td><td class="p-2">boy, coin</td></tr>
+                <tr class="border-b bg-slate-50"><td class="ipa p-2">/əʊ/</td><td class="p-2">GOAT</td><td class="p-2">go, home</td></tr>
+                <tr class="border-b"><td class="ipa p-2">/aʊ/</td><td class="p-2">MOUTH</td><td class="p-2">now, house</td></tr>
+                <tr class="border-b bg-slate-50"><td class="ipa p-2">/ɪə/</td><td class="p-2">NEAR</td><td class="p-2">ear, here</td></tr>
+                <tr class="border-b"><td class="ipa p-2">/eə/</td><td class="p-2">SQUARE</td><td class="p-2">air, care</td></tr>
+                <tr><td class="ipa p-2">/ʊə/</td><td class="p-2">CURE</td><td class="p-2">pure, tour</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Three-term description -->
+    <div>
+      <h3 class="text-2xl font-bold text-blue-900 mb-4">5.4 Three-Term Description</h3>
+      <p class="mb-4">Every consonant can be uniquely identified by a three-term label:</p>
+      <div class="bg-white rounded-xl shadow p-6 mb-6">
+        <ol class="list-decimal pl-5 space-y-2">
+          <li><strong>Voicing</strong> – voiced (+) or voiceless (−)</li>
+          <li><strong>Place of articulation</strong> – where in the vocal tract the obstruction occurs (bilabial, labiodental, dental, alveolar, post-alveolar, palato-alveolar, palatal, velar, glottal…)</li>
+          <li><strong>Manner of articulation</strong> – how the airstream is obstructed (plosive/stop, affricate, fricative, nasal, approximant, lateral…)</li>
+        </ol>
+        <p class="mt-4 font-medium">Examples:</p>
+        <ul class="list-disc pl-5 text-sm space-y-1">
+          <li><span class="ipa">/p/</span> = voiceless bilabial plosive</li>
+          <li><span class="ipa">/d/</span> = voiced alveolar plosive</li>
+          <li><span class="ipa">/ʃ/</span> = voiceless palato-alveolar fricative</li>
+          <li><span class="ipa">/m/</span> = voiced bilabial nasal</li>
+          <li><span class="ipa">/l/</span> = voiced alveolar lateral approximant</li>
+        </ul>
+      </div>
+
+      <p class="mb-4">Vowels are described by a different set of parameters (often more than three):</p>
+      <ul class="list-disc pl-5 mb-4">
+        <li><strong>Height</strong> of the tongue (close / high, mid, open / low)</li>
+        <li><strong>Backness</strong> (front, central, back)</li>
+        <li><strong>Lip rounding</strong> (rounded / unrounded)</li>
+        <li>Length (long / short) and tenseness are also relevant in English.</li>
+      </ul>
+      <p class="bg-indigo-50 p-4 rounded-lg text-sm">Example: <span class="ipa">/iː/</span> = close front unrounded long vowel; <span class="ipa">/ɒ/</span> = open back rounded short vowel.</p>
+    </div>
+  </div>
+</section>
+
+<!-- INTERACTIVE QUIZ -->
+<section id="quiz" class="mb-20">
+  <h2 class="text-3xl font-bold text-blue-900 border-b-4 border-blue-600 pb-2 mb-6">Self-Assessment Quiz</h2>
+  <div id="quiz-container" class="space-y-6"></div>
+  <div class="mt-6 flex gap-4">
+    <button onclick="checkQuiz()" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-lg font-medium">Check Answers</button>
+    <button onclick="resetQuiz()" class="bg-slate-500 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium">Reset</button>
+  </div>
+  <div id="quiz-result" class="mt-4 text-lg font-semibold hidden"></div>
+</section>
+
+<!-- FOOTER -->
+<footer class="border-t border-slate-200 pt-8 pb-12 text-center text-sm text-slate-500">
+  <p>ENGL4041: Language and Creativity · Ability Enhancement Course</p>
+  <p class="mt-1">Single-file interactive textbook · Designed for depth, clarity and visual learning</p>
+  <p class="mt-3 text-xs">Content synthesised for educational purposes. IPA transcriptions follow common RP conventions.</p>
+</footer>
+
+</main>
+
+<script>
+// Chart: Lecture Hours
+new Chart(document.getElementById('hoursChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Language Varieties', 'Language & Emotion', 'Register & Collocation', 'Ambiguity', 'English Phonetics'],
+    datasets: [{
+      label: 'Lecture Hours',
+      data: [6, 6, 4, 4, 10],
+      backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'],
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, max: 12, title: { display: true, text: 'Hours' } } }
+  }
+});
+
+// Chart: Phoneme distribution
+new Chart(document.getElementById('phonemeChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Consonants (24)', 'Monophthongs (12)', 'Diphthongs (8)'],
+    datasets: [{
+      data: [24, 12, 8],
+      backgroundColor: ['#4f46e5', '#06b6d4', '#f97316'],
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      title: { display: true, text: 'Composition of the 44 English Phonemes (RP)', font: { size: 14 } },
+      legend: { position: 'bottom' }
+    }
+  }
+});
+
+// Active nav highlighting
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(sec => {
+    if (scrollY >= sec.offsetTop - 120) current = sec.id;
+  });
+  navLinks.forEach(link => {
+    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+  });
+});
+
+// Quiz data
+const quizData = [
+  {
+    q: "Which of the following is NOT a design feature unique to human language according to Hockett?",
+    options: ["Displacement", "Duality of patterning", "Instinctive fixed calls", "Productivity"],
+    answer: 2
+  },
+  {
+    q: "An isogloss is:",
+    options: ["A personal speech variety", "A geographic boundary of a linguistic feature", "A formal register", "A type of metaphor"],
+    answer: 1
+  },
+  {
+    q: "“Sweet sorrow” is an example of:",
+    options: ["Simile", "Hyperbole", "Oxymoron", "Alliteration"],
+    answer: 2
+  },
+  {
+    q: "Which is a strong collocation?",
+    options: ["make a photo", "heavy rain", "do a decision", "powerful tea"],
+    answer: 1
+  },
+  {
+    q: "“Visiting relatives can be boring” is primarily an example of:",
+    options: ["Lexical ambiguity", "Syntactic ambiguity", "Phonological ambiguity", "Register shift"],
+    answer: 1
+  },
+  {
+    q: "English speech sounds are produced with which airstream mechanism?",
+    options: ["Velaric ingressive", "Glottalic egressive", "Pulmonic egressive", "Pulmonic ingressive"],
+    answer: 2
+  },
+  {
+    q: "The three-term description of /ʃ/ is:",
+    options: ["Voiced alveolar fricative", "Voiceless palato-alveolar fricative", "Voiceless bilabial plosive", "Voiced velar nasal"],
+    answer: 1
+  },
+  {
+    q: "How many pure vowels (monophthongs) are there in the traditional RP 44-phoneme system?",
+    options: ["8", "12", "20", "24"],
+    answer: 1
+  }
+];
+
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = quizData.map((item, i) => `
+    <div class="bg-white rounded-xl shadow border p-5" data-q="${i}">
+      <p class="font-medium mb-3">${i+1}. ${item.q}</p>
+      <div class="space-y-2">
+        ${item.options.map((opt, j) => `
+          <label class="quiz-option flex items-center gap-2 p-2 rounded-lg border border-transparent">
+            <input type="radio" name="q${i}" value="${j}" class="accent-blue-600">
+            <span>${opt}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function checkQuiz() {
+  let score = 0;
+  quizData.forEach((item, i) => {
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    const labels = document.querySelectorAll(`[data-q="${i}"] .quiz-option`);
+    labels.forEach(l => { l.classList.remove('correct','incorrect'); });
+    if (selected) {
+      const val = parseInt(selected.value);
+      if (val === item.answer) {
+        score++;
+        selected.closest('label').classList.add('correct');
+      } else {
+        selected.closest('label').classList.add('incorrect');
+        labels[item.answer].classList.add('correct');
+      }
+    } else {
+      labels[item.answer].classList.add('correct');
+    }
+  });
+  const result = document.getElementById('quiz-result');
+  result.classList.remove('hidden');
+  result.textContent = `Score: ${score} / ${quizData.length}`;
+  result.className = `mt-4 text-lg font-semibold ${score >= 6 ? 'text-green-700' : 'text-amber-700'}`;
+}
+
+function resetQuiz() {
+  document.querySelectorAll('input[type=radio]').forEach(r => r.checked = false);
+  document.querySelectorAll('.quiz-option').forEach(l => l.classList.remove('correct','incorrect'));
+  document.getElementById('quiz-result').classList.add('hidden');
+}
+
+renderQuiz();
+</script>
+</body>
+</html>
