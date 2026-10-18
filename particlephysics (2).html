@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATOMIC & SUBATOMIC PARTICLE EXPLORER // STANDARD MODEL</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --cyan: #00f0ff;
+  --magenta: #ff00aa;
+  --purple: #aa00ff;
+  --green: #00ff88;
+  --yellow: #ffee00;
+  --bg: #02040a;
+  --panel: rgba(0, 18, 36, 0.78);
+  --glow: 0 0 12px var(--cyan), 0 0 24px rgba(0, 240, 255, 0.35);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--cyan);
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+  height: 100vh;
+  cursor: crosshair;
+}
+
+#canvas-container {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+/* ===== HOLOGRAPHIC HUD ===== */
+.hud {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hud-panel {
+  background: var(--panel);
+  border: 1px solid rgba(0, 240, 255, 0.45);
+  box-shadow: var(--glow), inset 0 0 30px rgba(0, 80, 120, 0.25);
+  backdrop-filter: blur(10px);
+  clip-path: polygon(
+    0 10px, 10px 0, calc(100% - 10px) 0, 100% 10px,
+    100% calc(100% - 10px), calc(100% - 10px) 100%,
+    10px 100%, 0 calc(100% - 10px)
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.hud-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 240, 255, 0.03) 2px,
+    rgba(0, 240, 255, 0.03) 4px
+  );
+  pointer-events: none;
+  animation: scan 7s linear infinite;
+}
+
+@keyframes scan {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 120px; }
+}
+
+.hud-panel::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  animation: sweep 4s ease-in-out infinite;
+}
+
+@keyframes sweep {
+  0%, 100% { transform: translateX(-100%); opacity: 0; }
+  50% { transform: translateX(100%); opacity: 1; }
+}
+
+/* Top bar */
+#top-bar {
+  top: 14px; left: 50%;
+  transform: translateX(-50%);
+  padding: 0;
+  text-align: center;
+  min-width: 540px;
+}
+
+#top-bar .hud-panel { padding: 11px 32px; }
+
+#top-bar h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px var(--cyan);
+  margin-bottom: 2px;
+}
+
+#top-bar .sub {
+  font-size: 0.68rem;
+  opacity: 0.7;
+  letter-spacing: 0.12em;
+}
+
+/* Left category panel */
+#category-panel {
+  top: 90px; left: 16px;
+  width: 200px;
+  pointer-events: auto;
+}
+
+#category-panel .hud-panel { padding: 14px 12px; }
+
+#category-panel h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  margin-bottom: 10px;
+  color: var(--magenta);
+  text-shadow: 0 0 10px var(--magenta);
+}
+
+.cat-btn {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  color: var(--cyan);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.74rem;
+  padding: 8px 10px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  transition: all 0.22s;
+  text-align: left;
+  letter-spacing: 0.05em;
+}
+
+.cat-btn:hover, .cat-btn.active {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--cyan);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
+  text-shadow: 0 0 8px var(--cyan);
+}
+
+.cat-btn::before { content: '▸ '; opacity: 0.45; }
+
+/* Right info HUD */
+#info-panel {
+  top: 90px; right: 16px;
+  width: 360px;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateX(28px);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#info-panel.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+#info-panel .hud-panel { padding: 16px 14px; }
+
+#info-panel::-webkit-scrollbar { width: 4px; }
+#info-panel::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 2px; }
+
+.particle-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  margin-bottom: 2px;
+  text-shadow: 0 0 14px currentColor;
+}
+
+.particle-symbol {
+  font-size: 1.7rem;
+  opacity: 0.85;
+  margin-bottom: 10px;
+}
+
+.prop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin: 12px 0;
+}
+
+.prop {
+  background: rgba(0, 35, 55, 0.55);
+  border: 1px solid rgba(0, 240, 255, 0.18);
+  padding: 7px 9px;
+}
+
+.prop-label {
+  font-size: 0.58rem;
+  opacity: 0.55;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.prop-value {
+  font-size: 0.9rem;
+  color: #fff;
+  text-shadow: 0 0 6px var(--cyan);
+}
+
+.desc {
+  font-size: 0.74rem;
+  line-height: 1.5;
+  opacity: 0.9;
+  margin-top: 10px;
+  border-top: 1px solid rgba(0, 240, 255, 0.18);
+  padding-top: 10px;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.58rem;
+  padding: 2px 6px;
+  border: 1px solid;
+  margin: 2px 2px 2px 0;
+  letter-spacing: 0.07em;
+}
+
+/* Quark composition visual */
+.quark-comp {
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(0, 40, 60, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+}
+
+.quark-comp h3 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+  color: var(--green);
+}
+
+.quark-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.quark-chip {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 2px solid;
+  box-shadow: 0 0 12px currentColor;
+  position: relative;
+  animation: quarkPulse 2.4s ease-in-out infinite;
+}
+
+.quark-chip small {
+  font-size: 0.55rem;
+  opacity: 0.8;
+  margin-top: 1px;
+}
+
+@keyframes quarkPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.quark-formula {
+  text-align: center;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  margin-top: 6px;
+  color: #fff;
+  text-shadow: 0 0 8px var(--cyan);
+}
+
+.color-legend {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 6px;
+  font-size: 0.6rem;
+}
+
+.color-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 3px;
+  box-shadow: 0 0 5px currentColor;
+}
+
+/* Bottom controls */
+#bottom-bar {
+  bottom: 14px; left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+#bottom-bar .hud-panel {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 7px 18px;
+}
+
+.ctrl-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  color: var(--cyan);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.68rem;
+  padding: 5px 12px;
+  cursor: pointer;
+  letter-spacing: 0.07em;
+  transition: all 0.2s;
+}
+
+.ctrl-btn:hover {
+  background: rgba(0, 240, 255, 0.15);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+}
+
+#status {
+  font-size: 0.64rem;
+  opacity: 0.7;
+  letter-spacing: 0.04em;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Legend */
+#legend {
+  bottom: 14px; left: 16px;
+  pointer-events: none;
+}
+
+#legend .hud-panel { padding: 8px 12px; font-size: 0.62rem; }
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 2px 0;
+}
+
+.legend-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* Classification Table Modal */
+#table-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 5, 15, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  backdrop-filter: blur(6px);
+}
+
+#table-modal.open { display: flex; }
+
+#table-modal .hud-panel {
+  width: min(920px, 94vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 22px 24px;
+  pointer-events: auto;
+}
+
+#table-modal h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.15em;
+  text-align: center;
+  margin-bottom: 16px;
+  text-shadow: 0 0 18px var(--cyan);
+}
+
+.sm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+  margin-bottom: 18px;
+}
+
+.sm-table th {
+  background: rgba(0, 60, 90, 0.5);
+  color: var(--cyan);
+  padding: 7px 6px;
+  text-align: center;
+  letter-spacing: 0.08em;
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+}
+
+.sm-table td {
+  padding: 6px 5px;
+  text-align: center;
+  border: 1px solid rgba(0, 240, 255, 0.12);
+  background: rgba(0, 25, 40, 0.4);
+}
+
+.sm-table tr:hover td {
+  background: rgba(0, 60, 90, 0.35);
+}
+
+.sm-table .quark-cell { color: #ff8899; }
+.sm-table .lepton-cell { color: #66bbff; }
+.sm-table .boson-cell { color: #88ffaa; }
+.sm-table .mass-cell { color: #ffee88; font-size: 0.68rem; }
+
+.close-table {
+  display: block;
+  margin: 12px auto 0;
+  background: transparent;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  padding: 8px 28px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-table:hover {
+  background: rgba(0, 240, 255, 0.15);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+}
+
+/* Structure view indicator */
+#structure-banner {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+#structure-banner.show { opacity: 1; }
+
+#structure-banner .hud-panel {
+  padding: 6px 20px;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  text-shadow: 0 0 10px var(--green);
+}
+
+/* Loading / intro */
+#intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: radial-gradient(ellipse at center, #041020 0%, #000 70%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 1.1s ease;
+}
+
+#intro.fade {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#intro h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2.1rem;
+  letter-spacing: 0.22em;
+  text-shadow: 0 0 40px var(--cyan);
+  margin-bottom: 10px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; text-shadow: 0 0 60px var(--cyan), 0 0 100px var(--cyan); }
+}
+
+#intro p {
+  font-size: 0.82rem;
+  opacity: 0.7;
+  letter-spacing: 0.14em;
+  margin-bottom: 28px;
+}
+
+#start-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.88rem;
+  letter-spacing: 0.18em;
+  padding: 13px 36px;
+  background: transparent;
+  border: 2px solid var(--cyan);
+  color: var(--cyan);
+  cursor: pointer;
+  transition: all 0.3s;
+  text-shadow: 0 0 10px var(--cyan);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+#start-btn:hover {
+  background: rgba(0, 240, 255, 0.15);
+  box-shadow: 0 0 40px rgba(0, 240, 255, 0.6);
+  transform: scale(1.04);
+}
+
+@media (max-width: 900px) {
+  #category-panel { width: 150px; }
+  #info-panel { width: 280px; }
+  #top-bar { min-width: 92vw; }
+}
+</style>
+</head>
+<body>
+
+<div id="intro">
+  <h1>PARTICLE EXPLORER</h1>
+  <p>STANDARD MODEL • QUARK STRUCTURE • HOLOGRAPHIC INTERFACE</p>
+  <button id="start-btn">INITIALIZE SIMULATION</button>
+</div>
+
+<div id="canvas-container"></div>
+
+<!-- HUD -->
+<div class="hud" id="top-bar">
+  <div class="hud-panel">
+    <h1>ATOMIC & SUBATOMIC PARTICLE EXPLORER</h1>
+    <div class="sub">STANDARD MODEL // QUARK COMPOSITION // PDG DATA // REAL-TIME 3D</div>
+  </div>
+</div>
+
+<div class="hud" id="category-panel">
+  <div class="hud-panel">
+    <h2>CATEGORIES</h2>
+    <button class="cat-btn active" data-cat="all">ALL PARTICLES</button>
+    <button class="cat-btn" data-cat="quarks">QUARKS</button>
+    <button class="cat-btn" data-cat="leptons">LEPTONS</button>
+    <button class="cat-btn" data-cat="bosons">BOSONS</button>
+    <button class="cat-btn" data-cat="composite">COMPOSITES</button>
+    <button class="cat-btn" data-cat="table" id="btn-table" style="margin-top:10px;border-color:var(--magenta);color:var(--magenta);">CLASSIFICATION TABLE</button>
+  </div>
+</div>
+
+<div class="hud" id="info-panel">
+  <div class="hud-panel" id="info-content"></div>
+</div>
+
+<div class="hud" id="legend">
+  <div class="hud-panel">
+    <div class="legend-item"><span class="legend-dot" style="color:#ff4466;background:#ff4466;"></span> + Charge</div>
+    <div class="legend-item"><span class="legend-dot" style="color:#44aaff;background:#44aaff;"></span> − Charge</div>
+    <div class="legend-item"><span class="legend-dot" style="color:#aa88ff;background:#aa88ff;"></span> Neutral</div>
+    <div class="legend-item"><span class="legend-dot" style="color:#00ff88;background:#00ff88;"></span> Force Carrier</div>
+  </div>
+</div>
+
+<div class="hud" id="bottom-bar">
+  <div class="hud-panel">
+    <button class="ctrl-btn" id="btn-reset">RESET VIEW</button>
+    <button class="ctrl-btn" id="btn-audio">AUDIO: ON</button>
+    <button class="ctrl-btn" id="btn-auto">AUTO-ORBIT: ON</button>
+    <button class="ctrl-btn" id="btn-structure" style="display:none;">EXIT STRUCTURE</button>
+    <span id="status">SELECT A PARTICLE • DRAG TO ORBIT • SCROLL TO ZOOM</span>
+  </div>
+</div>
+
+<div id="structure-banner">
+  <div class="hud-panel">QUARK STRUCTURE VIEW • COLOR CONFINEMENT ACTIVE</div>
+</div>
+
+<!-- Classification Table Modal -->
+<div id="table-modal">
+  <div class="hud-panel">
+    <h2>STANDARD MODEL CLASSIFICATION</h2>
+
+    <table class="sm-table">
+      <thead>
+        <tr>
+          <th colspan="5">FERMIONS (Spin ½) — Matter Particles</th>
+        </tr>
+        <tr>
+          <th>Generation</th>
+          <th>Quark (up-type)</th>
+          <th>Quark (down-type)</th>
+          <th>Lepton (charged)</th>
+          <th>Neutrino</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>I</td>
+          <td class="quark-cell">u  Up<br><span class="mass-cell">2.16 MeV</span><br>+⅔ e</td>
+          <td class="quark-cell">d  Down<br><span class="mass-cell">4.67 MeV</span><br>−⅓ e</td>
+          <td class="lepton-cell">e⁻  Electron<br><span class="mass-cell">0.511 MeV</span><br>−1 e</td>
+          <td class="lepton-cell">νₑ  e-neutrino<br><span class="mass-cell">&lt;0.8 eV</span><br>0</td>
+        </tr>
+        <tr>
+          <td>II</td>
+          <td class="quark-cell">c  Charm<br><span class="mass-cell">1.27 GeV</span><br>+⅔ e</td>
+          <td class="quark-cell">s  Strange<br><span class="mass-cell">93.4 MeV</span><br>−⅓ e</td>
+          <td class="lepton-cell">μ⁻  Muon<br><span class="mass-cell">105.7 MeV</span><br>−1 e</td>
+          <td class="lepton-cell">ν_μ  μ-neutrino<br><span class="mass-cell">&lt;0.17 MeV</span><br>0</td>
+        </tr>
+        <tr>
+          <td>III</td>
+          <td class="quark-cell">t  Top<br><span class="mass-cell">172.6 GeV</span><br>+⅔ e</td>
+          <td class="quark-cell">b  Bottom<br><span class="mass-cell">4.18 GeV</span><br>−⅓ e</td>
+          <td class="lepton-cell">τ⁻  Tau<br><span class="mass-cell">1.777 GeV</span><br>−1 e</td>
+          <td class="lepton-cell">ν_τ  τ-neutrino<br><span class="mass-cell">&lt;18 MeV</span><br>0</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="sm-table">
+      <thead>
+        <tr>
+          <th colspan="5">BOSONS (Integer Spin) — Force Carriers & Higgs</th>
+        </tr>
+        <tr>
+          <th>Particle</th>
+          <th>Symbol</th>
+          <th>Mass</th>
+          <th>Charge</th>
+          <th>Force / Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="boson-cell">Gluon</td>
+          <td class="boson-cell">g</td>
+          <td class="mass-cell">0</td>
+          <td>0</td>
+          <td>Strong force (color)</td>
+        </tr>
+        <tr>
+          <td class="boson-cell">Photon</td>
+          <td class="boson-cell">γ</td>
+          <td class="mass-cell">0</td>
+          <td>0</td>
+          <td>Electromagnetic</td>
+        </tr>
+        <tr>
+          <td class="boson-cell">W Boson</td>
+          <td class="boson-cell">W±</td>
+          <td class="mass-cell">80.37 GeV</td>
+          <td>±1</td>
+          <td>Weak force (charged)</td>
+        </tr>
+        <tr>
+          <td class="boson-cell">Z Boson</td>
+          <td class="boson-cell">Z⁰</td>
+          <td class="mass-cell">91.19 GeV</td>
+          <td>0</td>
+          <td>Weak force (neutral)</td>
+        </tr>
+        <tr>
+          <td class="boson-cell">Higgs</td>
+          <td class="boson-cell">H⁰</td>
+          <td class="mass-cell">125.25 GeV</td>
+          <td>0</td>
+          <td>Mass generation</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table class="sm-table">
+      <thead>
+        <tr>
+          <th colspan="4">KEY COMPOSITES (Hadrons)</th>
+        </tr>
+        <tr>
+          <th>Particle</th>
+          <th>Quark Content</th>
+          <th>Mass</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Proton (p)</td>
+          <td class="quark-cell">u u d</td>
+          <td class="mass-cell">938.3 MeV</td>
+          <td>Baryon</td>
+        </tr>
+        <tr>
+          <td>Neutron (n)</td>
+          <td class="quark-cell">u d d</td>
+          <td class="mass-cell">939.6 MeV</td>
+          <td>Baryon</td>
+        </tr>
+        <tr>
+          <td>Pion (π⁺)</td>
+          <td class="quark-cell">u d̄</td>
+          <td class="mass-cell">139.6 MeV</td>
+          <td>Meson</td>
+        </tr>
+        <tr>
+          <td>Pion (π⁻)</td>
+          <td class="quark-cell">d ū</td>
+          <td class="mass-cell">139.6 MeV</td>
+          <td>Meson</td>
+        </tr>
+        <tr>
+          <td>Pion (π⁰)</td>
+          <td class="quark-cell">(uū − dđ)/√2</td>
+          <td class="mass-cell">135.0 MeV</td>
+          <td>Meson</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-size:0.68rem;opacity:0.7;text-align:center;margin-top:8px;letter-spacing:0.05em;">
+      Data compiled from Particle Data Group (PDG) consensus values. Quarks carry color charge (R/G/B) and are confined.
+    </p>
+    <button class="close-table" id="close-table">CLOSE TABLE</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   PARTICLE DATA  –  PDG / Standard Model consensus
+   ============================================================ */
+const PARTICLES = [
+  // QUARKS
+  { id:'u', name:'Up Quark', symbol:'u', category:'quarks', mass:'2.16 MeV/c²', charge:'+2/3', spin:'1/2', generation:1, discovered:1968, color:true,
+    description:'Lightest quark. With the down quark it forms protons and neutrons. Carries color charge; confined by the strong force.',
+    interactions:['Strong','Electromagnetic','Weak'], colorHex:'#ff6688' },
+  { id:'d', name:'Down Quark', symbol:'d', category:'quarks', mass:'4.67 MeV/c²', charge:'−1/3', spin:'1/2', generation:1, discovered:1968, color:true,
+    description:'Second-lightest quark. Combines with up quarks to form nucleons. Never observed free due to confinement.',
+    interactions:['Strong','Electromagnetic','Weak'], colorHex:'#4488ff' },
+  { id:'c', name:'Charm Quark', symbol:'c', category:'quarks', mass:'1.27 GeV/c²', charge:'+2/3', spin:'1/2', generation:2, discovered:1974, color:true,
+    description:'Second-generation up-type quark. Discovered in the J/ψ meson (November Revolution). Enables precision QCD tests.',
+    interactions:['Strong','Electromagnetic','Weak'], colorHex:'#ffaa44' },
+  { id:'s', name:'Strange Quark', symbol:'s', category:'quarks', mass:'93.4 MeV/c²', charge:'−1/3', spin:'1/2', generation:2, discovered:1968, color:true,
+    description:'Carries strangeness quantum number. Appears in kaons and hyperons; central to CP-violation studies.',
+    interactions:['Strong','Electromagnetic','Weak'], colorHex:'#88ffaa' },
+  { id:'t', name:'Top Quark', symbol:'t', category:'quarks', mass:'172.57 GeV/c²', charge:'+2/3', spin:'1/2', generation:3, discovered:1995, color:true,
+    description:'Heaviest elementary particle. Decays before hadronizing. Couples most strongly to the Higgs field.',
+    interactions:['Strong','Electromagnetic','Weak'], colorHex:'#ff4444' },
+  { id:'b', name:'Bottom Quark', symbol:'b', category:'quarks', mass:'4.18 GeV/c²', charge:'−1/3', spin:'1/2', generation:3, discovered:1977, color:true,
+    description:'Third-generation down-type quark. B-mesons are a primary laboratory for CP violation and new-physics searches.',
+    interactions:['Strong','Electromagnetic','Weak'], colorHex:'#aa66ff' },
+
+  // LEPTONS
+  { id:'e', name:'Electron', symbol:'e⁻', category:'leptons', mass:'0.511 MeV/c²', charge:'−1', spin:'1/2', generation:1, discovered:1897, color:false,
+    description:'Lightest charged lepton. Determines chemistry of all atoms and carries everyday electricity.',
+    interactions:['Electromagnetic','Weak'], colorHex:'#44aaff' },
+  { id:'ve', name:'Electron Neutrino', symbol:'νₑ', category:'leptons', mass:'< 0.8 eV/c²', charge:'0', spin:'1/2', generation:1, discovered:1956, color:false,
+    description:'Nearly massless neutral lepton. Produced in beta decay. Oscillation proves non-zero mass.',
+    interactions:['Weak'], colorHex:'#aa88ff' },
+  { id:'mu', name:'Muon', symbol:'μ⁻', category:'leptons', mass:'105.66 MeV/c²', charge:'−1', spin:'1/2', generation:2, discovered:1936, color:false,
+    description:'Heavier electron cousin. Lifetime ~2.2 μs. Used in muon tomography and g−2 precision tests.',
+    interactions:['Electromagnetic','Weak'], colorHex:'#66ccff' },
+  { id:'vmu', name:'Muon Neutrino', symbol:'ν_μ', category:'leptons', mass:'< 0.17 MeV/c²', charge:'0', spin:'1/2', generation:2, discovered:1962, color:false,
+    description:'Second-generation neutrino. First observed in a pure beam at Brookhaven.',
+    interactions:['Weak'], colorHex:'#9988ff' },
+  { id:'tau', name:'Tau', symbol:'τ⁻', category:'leptons', mass:'1.777 GeV/c²', charge:'−1', spin:'1/2', generation:3, discovered:1975, color:false,
+    description:'Heaviest charged lepton. Decays rapidly into lighter leptons or hadrons.',
+    interactions:['Electromagnetic','Weak'], colorHex:'#22ddff' },
+  { id:'vtau', name:'Tau Neutrino', symbol:'ν_τ', category:'leptons', mass:'< 18.2 MeV/c²', charge:'0', spin:'1/2', generation:3, discovered:2000, color:false,
+    description:'Third neutrino flavor. Directly observed by DONUT at Fermilab. Completes the lepton family.',
+    interactions:['Weak'], colorHex:'#bb99ff' },
+
+  // BOSONS
+  { id:'g', name:'Gluon', symbol:'g', category:'bosons', mass:'0 (massless)', charge:'0', spin:'1', generation:null, discovered:1979, color:true,
+    description:'Massless mediator of the strong force. Itself carries color charge → asymptotic freedom & confinement. 8 color states.',
+    interactions:['Strong'], colorHex:'#00ff88' },
+  { id:'gamma', name:'Photon', symbol:'γ', category:'bosons', mass:'0 (massless)', charge:'0', spin:'1', generation:null, discovered:1905, color:false,
+    description:'Massless mediator of electromagnetism. Quantum of light. Couples to all electrically charged particles.',
+    interactions:['Electromagnetic'], colorHex:'#ffff66' },
+  { id:'W', name:'W Boson', symbol:'W±', category:'bosons', mass:'80.37 GeV/c²', charge:'±1', spin:'1', generation:null, discovered:1983, color:false,
+    description:'Charged weak-force mediator. Responsible for beta decay and flavor change. Mass from Higgs mechanism.',
+    interactions:['Weak','Electromagnetic'], colorHex:'#ff88aa' },
+  { id:'Z', name:'Z Boson', symbol:'Z⁰', category:'bosons', mass:'91.19 GeV/c²', charge:'0', spin:'1', generation:null, discovered:1983, color:false,
+    description:'Neutral weak-force mediator. Couples to all fermions. Precision Z-pole data were a LEP cornerstone.',
+    interactions:['Weak'], colorHex:'#ffaa88' },
+  { id:'H', name:'Higgs Boson', symbol:'H⁰', category:'bosons', mass:'125.25 GeV/c²', charge:'0', spin:'0', generation:null, discovered:2012, color:false,
+    description:'Scalar boson of the Higgs field. Gives mass to W, Z and fermions via spontaneous symmetry breaking.',
+    interactions:['Yukawa (mass)'], colorHex:'#ffee44' },
+
+  // COMPOSITES with explicit quark content
+  { id:'p', name:'Proton', symbol:'p', category:'composite', mass:'938.272 MeV/c²', charge:'+1', spin:'1/2', generation:null, discovered:1917, color:false,
+    description:'Bound state of two up quarks and one down quark (uud). Stable. Nucleus of hydrogen and the most common baryon.',
+    interactions:['Strong','Electromagnetic','Weak'], colorHex:'#ff5555',
+    quarks: [
+      { flavor:'u', charge:'+2/3', color:'R', colorHex:'#ff3355' },
+      { flavor:'u', charge:'+2/3', color:'G', colorHex:'#33ff66' },
+      { flavor:'d', charge:'−1/3', color:'B', colorHex:'#4488ff' }
+    ],
+    formula:'uud', type:'Baryon'
+  },
+  { id:'n', name:'Neutron', symbol:'n', category:'composite', mass:'939.565 MeV/c²', charge:'0', spin:'1/2', generation:null, discovered:1932, color:false,
+    description:'Bound state of one up and two down quarks (udd). Free neutron lifetime ~880 s. Essential for nuclei beyond hydrogen.',
+    interactions:['Strong','Weak'], colorHex:'#8888ff',
+    quarks: [
+      { flavor:'u', charge:'+2/3', color:'R', colorHex:'#ff3355' },
+      { flavor:'d', charge:'−1/3', color:'G', colorHex:'#33ff66' },
+      { flavor:'d', charge:'−1/3', color:'B', colorHex:'#4488ff' }
+    ],
+    formula:'udd', type:'Baryon'
+  },
+  { id:'pi', name:'Pion (π±)', symbol:'π±', category:'composite', mass:'139.57 MeV/c²', charge:'±1', spin:'0', generation:null, discovered:1947, color:false,
+    description:'Lightest meson (quark–antiquark). Mediates residual nuclear force. Charged pions decay mainly to muons.',
+    interactions:['Strong','Electromagnetic','Weak'], colorHex:'#55ffaa',
+    quarks: [
+      { flavor:'u', charge:'+2/3', color:'R', colorHex:'#ff3355' },
+      { flavor:"d̄", charge:'+1/3', color:'anti-R', colorHex:'#ff99aa' }
+    ],
+    formula:'u d̄  (π⁺)  /  d ū  (π⁻)', type:'Meson'
+  }
+];
+
+/* ============================================================
+   THREE.JS
+   ============================================================ */
+let scene, camera, renderer, controls;
+let particleMeshes = [];
+let structureGroup = null;   // for quark-structure view
+let selectedId = null;
+let autoOrbit = true;
+let structureMode = false;
+let clock = new THREE.Clock();
+let starField, ambientParticles;
+
+const container = document.getElementById('canvas-container');
+
+function initThree() {
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x02040a, 0.011);
+
+  camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 9, 30);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x02040a, 1);
+  container.appendChild(renderer.domElement);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.minDistance = 6;
+  controls.maxDistance = 90;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.35;
+
+  scene.add(new THREE.AmbientLight(0x112233, 0.55));
+  const p1 = new THREE.PointLight(0x00f0ff, 1.1, 110);
+  p1.position.set(16, 22, 14);
+  scene.add(p1);
+  const p2 = new THREE.PointLight(0xff00aa, 0.65, 80);
+  p2.position.set(-18, -12, -16);
+  scene.add(p2);
+
+  createStarField();
+  createAmbientParticles();
+  createParticleMeshes();
+
+  window.addEventListener('resize', onResize);
+  renderer.domElement.addEventListener('click', onCanvasClick);
+}
+
+function createStarField() {
+  const geo = new THREE.BufferGeometry();
+  const count = 4200;
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count * 3; i++) pos[i] = (Math.random() - 0.5) * 420;
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  starField = new THREE.Points(geo, new THREE.PointsMaterial({
+    color: 0xaaccff, size: 0.32, transparent: true, opacity: 0.65, sizeAttenuation: true
+  }));
+  scene.add(starField);
+}
+
+function createAmbientParticles() {
+  const geo = new THREE.BufferGeometry();
+  const count = 700;
+  const pos = new Float32Array(count * 3);
+  const vel = [];
+  for (let i = 0; i < count; i++) {
+    pos[i*3] = (Math.random()-0.5)*55;
+    pos[i*3+1] = (Math.random()-0.5)*38;
+    pos[i*3+2] = (Math.random()-0.5)*55;
+    vel.push({ x:(Math.random()-0.5)*0.018, y:(Math.random()-0.5)*0.018, z:(Math.random()-0.5)*0.018 });
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.userData.vel = vel;
+  ambientParticles = new THREE.Points(geo, new THREE.PointsMaterial({
+    color: 0x00f0ff, size: 0.13, transparent: true, opacity: 0.38, blending: THREE.AdditiveBlending
+  }));
+  scene.add(ambientParticles);
+}
+
+function createParticleMeshes() {
+  particleMeshes.forEach(m => scene.remove(m.group));
+  particleMeshes = [];
+
+  const layouts = {
+    quarks:    { y: 4.5, r: 11.5, phase: 0 },
+    leptons:   { y: 0,   r: 14.5, phase: 0.5 },
+    bosons:    { y: -4.5,r: 9.5,  phase: 1.0 },
+    composite: { y: 8,   r: 6.5,  phase: 1.5 }
+  };
+
+  const cats = { quarks:[], leptons:[], bosons:[], composite:[] };
+  PARTICLES.forEach(p => cats[p.category].push(p));
+
+  Object.keys(cats).forEach(cat => {
+    const list = cats[cat];
+    const lay = layouts[cat];
+    list.forEach((p, i) => {
+      const angle = (i / list.length) * Math.PI * 2 + lay.phase;
+      const x = Math.cos(angle) * lay.r;
+      const z = Math.sin(angle) * lay.r;
+      const y = lay.y + (Math.random() - 0.5) * 1.2;
+
+      const group = new THREE.Group();
+      group.position.set(x, y, z);
+      group.userData = { particle: p, angle, radius: lay.r, yBase: lay.y };
+
+      const size = p.category === 'bosons' ? 0.52 : (p.category === 'composite' ? 0.68 : 0.42);
+      const geo = new THREE.SphereGeometry(size, 22, 22);
+      const mat = new THREE.MeshPhongMaterial({
+        color: new THREE.Color(p.colorHex),
+        emissive: new THREE.Color(p.colorHex),
+        emissiveIntensity: 0.42,
+        shininess: 85,
+        transparent: true,
+        opacity: 0.92
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      group.add(mesh);
+
+      // glow shell
+      const glow = new THREE.Mesh(
+        new THREE.SphereGeometry(size * 1.32, 14, 14),
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(p.colorHex), transparent: true, opacity: 0.13, side: THREE.BackSide })
+      );
+      group.add(glow);
+
+      // orbit ring for charged particles
+      if (p.charge !== '0' && p.category !== 'composite') {
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(size * 1.75, size * 1.9, 40),
+          new THREE.MeshBasicMaterial({ color: new THREE.Color(p.colorHex), transparent: true, opacity: 0.32, side: THREE.DoubleSide })
+        );
+        ring.rotation.x = Math.PI / 2;
+        group.add(ring);
+      }
+
+      // label sprite
+      const canvas = document.createElement('canvas');
+      canvas.width = 256; canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.font = 'bold 26px Orbitron, monospace';
+      ctx.fillStyle = p.colorHex;
+      ctx.textAlign = 'center';
+      ctx.shadowColor = p.colorHex;
+      ctx.shadowBlur = 10;
+      ctx.fillText(p.symbol, 128, 40);
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true, opacity: 0.9 }));
+      sprite.scale.set(3.0, 0.75, 1);
+      sprite.position.y = size + 1.05;
+      group.add(sprite);
+
+      scene.add(group);
+      particleMeshes.push({ group, mesh, particle: p, sprite });
+    });
+  });
+}
+
+/* ---- Structure (quark interior) view ---- */
+function enterStructureView(p) {
+  if (!p.quarks) return;
+  structureMode = true;
+  document.getElementById('structure-banner').classList.add('show');
+  document.getElementById('btn-structure').style.display = 'inline-block';
+
+  // hide normal particles
+  particleMeshes.forEach(pm => { pm.group.visible = false; });
+
+  // clear previous structure
+  if (structureGroup) scene.remove(structureGroup);
+  structureGroup = new THREE.Group();
+  scene.add(structureGroup);
+
+  // central confinement sphere (transparent)
+  const conf = new THREE.Mesh(
+    new THREE.SphereGeometry(3.8, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.06, wireframe: true })
+  );
+  structureGroup.add(conf);
+
+  // gluon flux lines (simple arcs)
+  const gluonMat = new THREE.LineBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.35 });
+  for (let i = 0; i < 6; i++) {
+    const curve = new THREE.QuadraticBezierCurve3(
+      new THREE.Vector3(Math.cos(i)*2.2, Math.sin(i*1.3)*1.5, Math.sin(i)*2.2),
+      new THREE.Vector3(0, (Math.random()-0.5)*3, 0),
+      new THREE.Vector3(Math.cos(i+2)*2.2, Math.sin((i+2)*1.3)*1.5, Math.sin(i+2)*2.2)
+    );
+    const pts = curve.getPoints(20);
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), gluonMat);
+    structureGroup.add(line);
+  }
+
+  // the quarks themselves
+  p.quarks.forEach((q, idx) => {
+    const angle = (idx / p.quarks.length) * Math.PI * 2;
+    const r = 2.1;
+    const qGroup = new THREE.Group();
+    qGroup.userData = { angle, radius: r, baseY: (Math.random()-0.5)*0.6, flavor: q.flavor };
+
+    const size = 0.55;
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(size, 20, 20),
+      new THREE.MeshPhongMaterial({
+        color: new THREE.Color(q.colorHex),
+        emissive: new THREE.Color(q.colorHex),
+        emissiveIntensity: 0.7,
+        shininess: 100
+      })
+    );
+    qGroup.add(mesh);
+
+    // color-charge glow
+    const glow = new THREE.Mesh(
+      new THREE.SphereGeometry(size * 1.4, 12, 12),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(q.colorHex), transparent: true, opacity: 0.2, side: THREE.BackSide })
+    );
+    qGroup.add(glow);
+
+    // label
+    const canvas = document.createElement('canvas');
+    canvas.width = 128; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.font = 'bold 28px Orbitron, monospace';
+    ctx.fillStyle = q.colorHex;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = q.colorHex;
+    ctx.shadowBlur = 8;
+    ctx.fillText(q.flavor, 64, 28);
+    ctx.font = '14px Share Tech Mono, monospace';
+    ctx.fillText(q.color, 64, 48);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true }));
+    sprite.scale.set(2.2, 1.1, 1);
+    sprite.position.y = 1.15;
+    qGroup.add(sprite);
+
+    qGroup.position.set(Math.cos(angle)*r, qGroup.userData.baseY, Math.sin(angle)*r);
+    structureGroup.add(qGroup);
+    qGroup.userData.mesh = mesh;
+  });
+
+  // center camera on structure
+  camera.position.set(0, 4, 12);
+  controls.target.set(0, 0, 0);
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.8;
+}
+
+function exitStructureView() {
+  structureMode = false;
+  document.getElementById('structure-banner').classList.remove('show');
+  document.getElementById('btn-structure').style.display = 'none';
+  if (structureGroup) {
+    scene.remove(structureGroup);
+    structureGroup = null;
+  }
+  particleMeshes.forEach(pm => { pm.group.visible = true; });
+  camera.position.set(0, 9, 30);
+  controls.target.set(0, 0, 0);
+  controls.autoRotateSpeed = 0.35;
+  controls.autoRotate = autoOrbit;
+}
+
+function onResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function onCanvasClick(event) {
+  if (structureMode) return;
+  const mouse = new THREE.Vector2(
+    (event.clientX / window.innerWidth) * 2 - 1,
+    -(event.clientY / window.innerHeight) * 2 + 1
+  );
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(particleMeshes.map(pm => pm.mesh));
+  if (hits.length) {
+    const pm = particleMeshes.find(p => p.mesh === hits[0].object);
+    if (pm) selectParticle(pm.particle);
+  }
+}
+
+function selectParticle(p) {
+  selectedId = p.id;
+  particleMeshes.forEach(pm => {
+    const sel = pm.particle.id === p.id;
+    pm.mesh.material.emissiveIntensity = sel ? 1.05 : 0.35;
+    pm.group.scale.setScalar(sel ? 1.32 : 1);
+  });
+
+  const chargeColor = p.charge.includes('+') ? '#ff6688' : (p.charge.includes('−') || p.charge.includes('-') ? '#44aaff' : '#aa88ff');
+  let extraHTML = '';
+
+  if (p.quarks) {
+    extraHTML = `
+      <div class="quark-comp">
+        <h3>QUARK COMPOSITION</h3>
+        <div class="quark-row">
+          ${p.quarks.map(q => `
+            <div class="quark-chip" style="color:${q.colorHex};border-color:${q.colorHex};background:rgba(0,0,0,0.4);">
+              ${q.flavor}
+              <small>${q.color}</small>
+            </div>
+          `).join('')}
+        </div>
+        <div class="quark-formula">${p.formula}  •  ${p.type}</div>
+        <div class="color-legend">
+          <span><span class="color-dot" style="background:#ff3355;color:#ff3355;"></span>R</span>
+          <span><span class="color-dot" style="background:#33ff66;color:#33ff66;"></span>G</span>
+          <span><span class="color-dot" style="background:#4488ff;color:#4488ff;"></span>B</span>
+          <span style="opacity:0.7;">Color confined • Net white</span>
+        </div>
+        <button class="ctrl-btn" id="btn-enter-structure" style="display:block;margin:10px auto 0;width:90%;">VIEW 3D QUARK STRUCTURE</button>
+      </div>
+    `;
+  }
+
+  document.getElementById('info-content').innerHTML = `
+    <div class="particle-name" style="color:${p.colorHex}">${p.name}</div>
+    <div class="particle-symbol">${p.symbol}</div>
+    <div>
+      <span class="tag" style="border-color:${p.colorHex};color:${p.colorHex}">${p.category.toUpperCase()}</span>
+      ${p.generation ? `<span class="tag" style="border-color:#00f0ff;color:#00f0ff">GEN ${p.generation}</span>` : ''}
+      ${p.color ? `<span class="tag" style="border-color:#00ff88;color:#00ff88">COLOR</span>` : ''}
+      ${p.type ? `<span class="tag" style="border-color:#ffaa00;color:#ffaa00">${p.type.toUpperCase()}</span>` : ''}
+    </div>
+    <div class="prop-grid">
+      <div class="prop"><div class="prop-label">Mass</div><div class="prop-value">${p.mass}</div></div>
+      <div class="prop"><div class="prop-label">Charge</div><div class="prop-value" style="color:${chargeColor}">${p.charge} e</div></div>
+      <div class="prop"><div class="prop-label">Spin</div><div class="prop-value">${p.spin} ħ</div></div>
+      <div class="prop"><div class="prop-label">Discovered</div><div class="prop-value">${p.discovered}</div></div>
+    </div>
+    <div class="prop">
+      <div class="prop-label">Interactions</div>
+      <div class="prop-value" style="font-size:0.78rem">${p.interactions.join(' • ')}</div>
+    </div>
+    <div class="desc">${p.description}</div>
+    ${extraHTML}
+  `;
+
+  document.getElementById('info-panel').classList.add('visible');
+  document.getElementById('status').textContent = `SELECTED: ${p.name.toUpperCase()}  •  ${p.symbol}`;
+  playSelectSound();
+
+  // wire the structure button if present
+  const btn = document.getElementById('btn-enter-structure');
+  if (btn) btn.addEventListener('click', () => enterStructureView(p));
+}
+
+function filterCategory(cat) {
+  if (cat === 'table') {
+    document.getElementById('table-modal').classList.add('open');
+    return;
+  }
+  if (structureMode) exitStructureView();
+  particleMeshes.forEach(pm => {
+    pm.group.visible = (cat === 'all' || pm.particle.category === cat);
+  });
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.cat === cat);
+  });
+}
+
+/* ============================================================
+   ANIMATION
+   ============================================================ */
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  if (ambientParticles) {
+    const pos = ambientParticles.geometry.attributes.position.array;
+    const vel = ambientParticles.geometry.userData.vel;
+    for (let i = 0; i < vel.length; i++) {
+      pos[i*3] += vel[i].x; pos[i*3+1] += vel[i].y; pos[i*3+2] += vel[i].z;
+      if (Math.abs(pos[i*3]) > 32) vel[i].x *= -1;
+      if (Math.abs(pos[i*3+1]) > 22) vel[i].y *= -1;
+      if (Math.abs(pos[i*3+2]) > 32) vel[i].z *= -1;
+    }
+    ambientParticles.geometry.attributes.position.needsUpdate = true;
+  }
+
+  if (!structureMode) {
+    particleMeshes.forEach((pm, idx) => {
+      const g = pm.group;
+      if (!g.visible) return;
+      const ud = g.userData;
+      ud.angle += 0.0014 * (ud.radius / 12);
+      g.position.x = Math.cos(ud.angle) * ud.radius;
+      g.position.z = Math.sin(ud.angle) * ud.radius;
+      g.position.y = ud.yBase + Math.sin(t * 0.65 + idx) * 0.32;
+      g.rotation.y += 0.007;
+      if (pm.particle.category === 'bosons') g.rotation.x += 0.004;
+      if (pm.particle.id !== selectedId) {
+        pm.mesh.material.emissiveIntensity = 0.32 + Math.sin(t * 1.8 + idx * 0.4) * 0.14;
+      }
+    });
+  } else if (structureGroup) {
+    // animate quarks inside the nucleon
+    structureGroup.children.forEach((child, idx) => {
+      if (child.userData && child.userData.angle !== undefined) {
+        child.userData.angle += 0.012;
+        const r = child.userData.radius;
+        child.position.x = Math.cos(child.userData.angle) * r;
+        child.position.z = Math.sin(child.userData.angle) * r;
+        child.position.y = child.userData.baseY + Math.sin(t * 2.2 + idx) * 0.25;
+        child.rotation.y += 0.02;
+        if (child.userData.mesh) {
+          child.userData.mesh.material.emissiveIntensity = 0.55 + Math.sin(t * 3 + idx) * 0.25;
+        }
+      }
+    });
+    // slowly rotate the whole structure
+    structureGroup.rotation.y += 0.003;
+  }
+
+  if (starField) starField.rotation.y += 0.00012;
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+/* ============================================================
+   AUDIO
+   ============================================================ */
+let audioCtx, masterGain, isAudioOn = true;
+
+function initAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.11;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 380;
+  masterGain.connect(filter);
+  filter.connect(audioCtx.destination);
+
+  [55, 82.5, 110, 165].forEach((f, i) => {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = i % 2 ? 'triangle' : 'sine';
+    osc.frequency.value = f;
+    g.gain.value = 0.07 / (i + 1);
+    osc.connect(g);
+    g.connect(masterGain);
+    osc.start();
+  });
+
+  setInterval(() => {
+    if (!isAudioOn || !audioCtx) return;
+    filter.frequency.linearRampToValueAtTime(280 + Math.random() * 450, audioCtx.currentTime + 4);
+  }, 5500);
+}
+
+function playSelectSound() {
+  if (!audioCtx || !isAudioOn) return;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(920, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(240, audioCtx.currentTime + 0.28);
+  g.gain.setValueAtTime(0.13, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.32);
+  osc.connect(g);
+  g.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.35);
+}
+
+function toggleAudio() {
+  isAudioOn = !isAudioOn;
+  if (masterGain) masterGain.gain.value = isAudioOn ? 0.11 : 0;
+  document.getElementById('btn-audio').textContent = `AUDIO: ${isAudioOn ? 'ON' : 'OFF'}`;
+}
+
+/* ============================================================
+   UI
+   ============================================================ */
+document.getElementById('start-btn').addEventListener('click', () => {
+  document.getElementById('intro').classList.add('fade');
+  setTimeout(() => document.getElementById('intro').style.display = 'none', 1100);
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  initAudio();
+});
+
+document.querySelectorAll('.cat-btn').forEach(btn => {
+  btn.addEventListener('click', () => filterCategory(btn.dataset.cat));
+});
+
+document.getElementById('close-table').addEventListener('click', () => {
+  document.getElementById('table-modal').classList.remove('open');
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (structureMode) exitStructureView();
+  camera.position.set(0, 9, 30);
+  controls.target.set(0, 0, 0);
+  selectedId = null;
+  particleMeshes.forEach(pm => {
+    pm.mesh.material.emissiveIntensity = 0.42;
+    pm.group.scale.setScalar(1);
+  });
+  document.getElementById('info-panel').classList.remove('visible');
+  document.getElementById('status').textContent = 'SELECT A PARTICLE • DRAG TO ORBIT • SCROLL TO ZOOM';
+});
+
+document.getElementById('btn-audio').addEventListener('click', toggleAudio);
+document.getElementById('btn-auto').addEventListener('click', () => {
+  autoOrbit = !autoOrbit;
+  controls.autoRotate = autoOrbit;
+  document.getElementById('btn-auto').textContent = `AUTO-ORBIT: ${autoOrbit ? 'ON' : 'OFF'}`;
+});
+document.getElementById('btn-structure').addEventListener('click', exitStructureView);
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+initThree();
+animate();
+</script>
+</body>
+</html>
